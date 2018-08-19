@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Dark Souls Importer",
     "author": "Nathan Grubbs",
-    "version": (1, 0, 0),
+    "version": (0, 1, 0),
     "blender": (2, 79, 0),
     "location": "View3D",
     "description": "A Dark Souls model importer for Blender",
