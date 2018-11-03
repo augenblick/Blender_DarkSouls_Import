@@ -9,22 +9,34 @@ bl_info = {
 }
 
 import os
+import sys
 from bpy.types import Operator
 from bpy.props import FloatVectorProperty
 from bpy_extras.object_utils import AddObjectHelper, object_data_add
 from mathutils import Vector
-import flver
-import DDS_extract
-import getOffsets
 
 if "bpy" in locals():
     import importlib
+    importlib.reload(flver)
+    importlib.reload(DDS_extract)
+    importlib.reload(getOffsets)
     importlib.reload(flver_UI)
 
 else:
+    from . import flver
+    from . import DDS_extract
+    from . import getOffsets
     from . import flver_UI
 
 import bpy
+
+# import flver
+# import DDS_extract
+# import getOffsets
+
+
+
+# import bpy
 
 
 def read_some_data(context, filepath, use_some_setting):

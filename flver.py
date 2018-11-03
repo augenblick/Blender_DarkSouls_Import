@@ -1,7 +1,7 @@
 import struct
 import binascii
 import os
-import DDS_extract
+from . import DDS_extract
 
 # a program to provide Blender with the data it needs to create a 3D model from Dark Souls data
 # author: Nathan Grubbs
