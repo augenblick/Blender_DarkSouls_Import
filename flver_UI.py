@@ -20,7 +20,7 @@ class DSPanel(bpy.types.Panel):
         row = layout.row()
 
         row = layout.row()
-        row.operator("import_test.some_data")
+        row.operator("mesh.import")
 
 
 def register():
