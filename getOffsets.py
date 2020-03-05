@@ -4,6 +4,8 @@ import struct
 import os
 
 
+
+
 def get_numberOfFiles(filePath):
     return readInt(filePath, 16)
 
@@ -97,3 +99,4 @@ BNDFileName = 'D:/DATA/obj/o0200.objbnd'
 print(get_flverDataOffsets(BNDFileName))
 print("tpf:")
 print(get_tpfDataOffsets(BNDFileName))
+

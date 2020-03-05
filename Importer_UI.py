@@ -16,18 +16,6 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-bl_info = {
-    "name": "Dark Souls Importer",
-    "description": "Imports Dark Souls environment, character, and object models from unpacked game data files",
-    "author": "Nathan Grubbs",
-    "version": (1, 0),
-    "blender": (2, 80, 0),
-    "location": "3D View > Tools",
-    "warning": "",
-    "wiki_url": "",
-    "category": "Import-Export",
-}
-
 import bpy
 
 from bpy.props import (
@@ -37,28 +25,6 @@ from bpy.props import (
                        )
 
 from bpy.types import (Panel, PropertyGroup)
-
-
-# ------------------------------------------------------------------------
-#    Scene Properties
-# ------------------------------------------------------------------------
-
-class MyProperties(PropertyGroup):
-
-    tpfPath : bpy.props.StringProperty(
-        name="",
-        description="The directory in the unpacked Dark Souls data where .tpf files are stored\n(e.g. '[DARK SOULS DATA]/map/tx/')",
-        default="C:\\Users\\", # todo: Pull value from config
-        maxlen=1024,
-        subtype='DIR_PATH')
-
-    ddsPath : bpy.props.StringProperty(
-        name="",
-        description="The directory .dds textures will be stored as they are unpacked\n(create a new or use and existing directory)",
-        default="C:\\Users\\", # todo: Pull value from config
-        maxlen=1024,
-        subtype='DIR_PATH')
-
 
 
 # ------------------------------------------------------------------------
@@ -80,27 +46,10 @@ class OBJECT_PT_DataPathSettings(Panel):
         layout = self.layout
         scene = context.scene
 
-
-
-        layout.label(text = ".TPF data input path:")
-        colTPF = layout.column()
-        colTPF.prop(scene.my_tool, "tpfPath", text="")
-        layout.separator()
-
-
-        layout.label(text = ".DDS data output path:")
-        colDDS = layout.column()
-        colDDS.prop(scene.my_tool, "ddsPath", text="")
-
         layout.separator()
         colSaveDef = layout.column()
         layout.operator("mesh.import", text="Select File")
 
-        layout.separator()
-        layout.separator()
-
-        # ImportDsData.getDataPath(scene.my_tool.tpfPath)
-        layout.operator("mesh.import", text="Select File")
 
  
 
@@ -130,23 +79,25 @@ class OBJECT_PT_DataPathSettings(Panel):
 # ------------------------------------------------------------------------
 
 classes = (
-    MyProperties,
-    OBJECT_PT_DataPathSettings,
+    # MyProperties,
+    OBJECT_PT_DataPathSettings
     # ImportDsData
 )
 
 def register():
     from bpy.utils import register_class
-    for cls in classes:
-        register_class(cls)
+    # for cls in classes:
+    #     register_class(cls)
+    register_class(OBJECT_PT_DataPathSettings)
 
-    bpy.types.Scene.my_tool = PointerProperty(type=MyProperties)
+    # bpy.types.Scene.my_tool = PointerProperty(type=MyProperties)
 
 def unregister():
     from bpy.utils import unregister_class
-    for cls in reversed(classes):
-        unregister_class(cls)
-    del bpy.types.Scene.my_tool
+    # for cls in reversed(classes):
+    #     unregister_class(cls)
+    unregister_class(OBJECT_PT_DataPathSettings)
+    # del bpy.types.Scene.my_tool
 
 
 if __name__ == "__main__":

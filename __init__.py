@@ -8,11 +8,13 @@ bl_info = {
     'blender': (2, 80, 0)
 }
  
-modulesNames = ['DDS_extract', 'flver', 'Importer_UI', 'getOffsets']
+modulesNames = ['Importer_UI', 'Importer', 'DDS_extract', 'flver', 'getOffsets']
  
 import sys
 import importlib
- 
+
+print("initializing")
+
 modulesFullNames = {}
 for currentModuleName in modulesNames:
     if 'DEBUG_MODE' in sys.argv:
