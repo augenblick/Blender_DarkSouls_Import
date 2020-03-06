@@ -1,32 +1,18 @@
 import os
 import sys
+import bpy
 from bpy.types import Operator
 from bpy.props import FloatVectorProperty
 from bpy_extras.object_utils import AddObjectHelper, object_data_add
 from mathutils import Vector
 
-# if "bpy" in locals():
-#     import importlib
-#     importlib.reload(flver)
-#     importlib.reload(DDS_extract)
-#     importlib.reload(getOffsets)
-#     importlib.reload(flver_UI)
-
-# else:
-#     from . import flver
-#     from . import DDS_extract
-#     from . import getOffsets
-#     from . import flver_UI
-
-import bpy
-
-# import flver
-# import DDS_extract
-# import getOffsets
 
 
+# Globals
+filepathImport = ""
+pathTPFs = ""
+pathDDSs = ""
 
-# import bpy
 
 
 def read_some_data(context, filepath, use_some_setting):
@@ -39,9 +25,9 @@ def read_some_data(context, filepath, use_some_setting):
 
     if not fileExtension == '.flver':
 
-        flverDataOffsets = GetOffsets.get_flverDataOffsets(filepath)
+        flverDataOffsets = get_flverDataOffsets(filepath)
 
-        tpfDataOffsets = getOffsets.get_tpfDataOffsets(filepath)
+        tpfDataOffsets = get_tpfDataOffsets(filepath)
         # extract all .dds textures
         for TPFOffset in tpfDataOffsets:
             DDS_extract.write_DDSFilesFromOffsets(filepath, sourceDirectory, destination, TPFOffset)
@@ -200,8 +186,11 @@ from bpy.types import Operator
 
 class ImportDSModel(Operator, ImportHelper):
     #Import Dark Souls model from file of type .flver, .objbnd, .partsbnd, or .chrbnd
+
+    bl_label = ""
+    bl_name = "Import DS Data"
     bl_idname = "mesh.import"
-    bl_label = "Select File"
+    bl_options = {"PRESET"}
 
     # ImportHelper mixin class uses this
     filename_ext = ".flver"
@@ -229,29 +218,18 @@ class ImportDSModel(Operator, ImportHelper):
     )
 
     def execute(self, context):
+        print(self.filepath)
         return read_some_data(context, self.filepath, self.use_setting)
 
 
-# Only needed if you want to add into a dynamic menu
-# def menu_func_import(self, context):
-#     self.layout.operator(ImportDSModel.bl_idname, text="Text Import Operator")
-
-
 def register():
-
     bpy.utils.register_class(ImportDSModel)
-    # bpy.utils.register_class(flver_UI.DSPanel)
-    # bpy.types.INFO_MT_file_import.append(menu_func_import)
 
 
 def unregister():
-    # bpy.utils.unregister_class(flver_UI.DSPanel)
     bpy.utils.unregister_class(ImportDSModel)
-    # bpy.types.INFO_MT_file_import.remove(menu_func_import)
+
 
 
 if __name__ == "__main__":
     register()
-
-    # test call
-    bpy.ops.import_test.some_data('INVOKE_DEFAULT')

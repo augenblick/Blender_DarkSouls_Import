@@ -17,14 +17,22 @@
 # ##### END GPL LICENSE BLOCK #####
 
 import bpy
+import os
+from bpy_extras.io_utils import ImportHelper
+from bpy.props import StringProperty, PointerProperty
 
-from bpy.props import (
-                        StringProperty,
-                        BoolProperty,
-                        PointerProperty,
-                       )
+from bpy.types import Panel, PropertyGroup
 
-from bpy.types import (Panel, PropertyGroup)
+
+class MyProperties(PropertyGroup):
+	filePath: StringProperty(
+					name="name", 
+					description="descrp", 
+					default="",
+					maxlen=0, 
+					subtype='FILE_PATH'
+	)
+
 
 
 # ------------------------------------------------------------------------
@@ -32,8 +40,9 @@ from bpy.types import (Panel, PropertyGroup)
 # ------------------------------------------------------------------------
 
 
-class OBJECT_PT_DataPathSettings(Panel):
-    bl_idname = "OBJECT_PT_DataPathSettings"
+
+class DSIMPORTER_PT_DataPathSettings(Panel):
+    bl_idname = "DSIMPORTER_PT_DataPathSettings"
     bl_label = "Dark Souls Import"
     bl_space_type = "VIEW_3D"   
     bl_region_type = "UI"
@@ -45,10 +54,13 @@ class OBJECT_PT_DataPathSettings(Panel):
 
         layout = self.layout
         scene = context.scene
+        mytool = scene.my_tool
 
         layout.separator()
-        colSaveDef = layout.column()
-        layout.operator("mesh.import", text="Select File")
+        layout.label(text = "praise the sun!", icon_value=custom_icons["custom_icon"].icon_id)
+        layout.operator("dsimporter.importdsdata", text="Import")
+
+
 
 
  
@@ -57,47 +69,66 @@ class OBJECT_PT_DataPathSettings(Panel):
 #    Operator
 # ------------------------------------------------------------------------
 
-# class ImportDsData(bpy.types.Operator):
-#     bl_label = "This label do anything?"
-#     bl_name = "Import DS Data"
-#     bl_idname = "mesh.import"
-#     bl_options = {"PRESET"}
+class DSIMPORTER_OT_ImportDsData(bpy.types.Operator, ImportHelper):
+    bl_idname = "dsimporter.importdsdata"
+    bl_name = "Import DS Data"
+    bl_label = "Import Mesh"
+    bl_options = {"PRESET"}
 
-#     dataPath = ""
+    # filename_ext = ".flver"
 
-#     @staticmethod
-#     def getDataPath(dataPath):
-#         ImportDsData.dataPath = dataPath
+    filter_glob : StringProperty(
+        default="*.flver;*.objbnd;*.partsbnd;*.chrbnd",
+        options={'HIDDEN'},
+        maxlen=255,
+        )
 
-#     def execute(self, context):
-#         print("Importing DS Data")
-#         print(ImportDsData.dataPath)
-#         return {"FINISHED"}
+    filepath: StringProperty(subtype="FILE_PATH")
+    
+    def execute(self, context):
+        file = open(self.filepath, 'rb')
+        print(file.name)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        print(os.path.join(os.path.dirname(__file__)))
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
 # ------------------------------------------------------------------------
 #    Registration
 # ------------------------------------------------------------------------
 
 classes = (
-    # MyProperties,
-    OBJECT_PT_DataPathSettings
-    # ImportDsData
+    MyProperties,
+    DSIMPORTER_PT_DataPathSettings,
+    DSIMPORTER_OT_ImportDsData
 )
 
 def register():
-    from bpy.utils import register_class
-    # for cls in classes:
-    #     register_class(cls)
-    register_class(OBJECT_PT_DataPathSettings)
 
-    # bpy.types.Scene.my_tool = PointerProperty(type=MyProperties)
+    global custom_icons
+    custom_icons = bpy.utils.previews.new()
+    icons_dir = os.path.join(os.path.dirname(__file__), "icons")
+    custom_icons.load("custom_icon", os.path.join(icons_dir, "icon.png"), 'IMAGE')
+
+    from bpy.utils import register_class
+    for cls in classes:
+        print(cls)
+        register_class(cls)
+
+
+    bpy.types.Scene.my_tool = PointerProperty(type=MyProperties)
 
 def unregister():
+    global custom_icons
+    bpy.utils.previews.remove(custom_icons)
+
     from bpy.utils import unregister_class
-    # for cls in reversed(classes):
-    #     unregister_class(cls)
-    unregister_class(OBJECT_PT_DataPathSettings)
-    # del bpy.types.Scene.my_tool
+    for cls in reversed(classes):
+        unregister_class(cls)
+
+    del bpy.types.Scene.my_tool
 
 
 if __name__ == "__main__":

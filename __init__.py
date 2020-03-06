@@ -7,13 +7,61 @@ bl_info = {
     'version': (0, 2, 0),
     'blender': (2, 80, 0)
 }
- 
-modulesNames = ['Importer_UI', 'Importer', 'DDS_extract', 'flver', 'getOffsets']
- 
-import sys
-import importlib
 
-print("initializing")
+import sys
+import os
+import importlib
+import bpy
+import bpy.utils.previews
+icons_dict = bpy.utils.previews.new()
+
+
+class AddDsPresets(bpy.types.AddonPreferences):
+    bl_idname = __package__  # "__name__" for single-file addon, "__package__" for multi-file
+
+    tpfPath: bpy.props.StringProperty(
+        default = "C:\\Program Files (x86)\\Steam\\SteamApps\\common\\Dark Souls Prepare to Die Edition\\DATA\\map\\tx",
+        name = "test",
+        description = "description here",
+        maxlen = 0,
+        subtype = 'DIR_PATH'
+        #todo: fill in other info
+        )
+    ddsPath: bpy.props.StringProperty(
+        default = "C:\\Program Files (x86)\\Steam\\SteamApps\\common\\Dark Souls Prepare to Die Edition\\DATA\\map\\tx\\textures",
+        name = "test",
+        description = "description here",
+        maxlen = 0,
+        subtype = 'DIR_PATH'
+        #todo: fill in other info
+        )
+
+    missingTexPath: bpy.props.StringProperty(
+        default = "C:\\Program Files (x86)\\Steam\\SteamApps\\common\\Dark Souls Prepare to Die Edition\\DATA\\map\\tx\\textures\\MissingTex.png",
+        name = "test",
+        description = "description here",
+        maxlen = 0,
+        subtype = 'FILE_PATH'
+        #todo: fill in other info
+        )
+
+    # create preferences panel of addons window
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text='Directory containing .tpf files:')
+        colTpf = layout.column()
+        colTpf.prop(self, 'tpfPath', expand = True)
+
+        layout.label(text='Directory in which to store .dds files:')
+        colDds = layout.column()
+        colDds.prop(self, 'ddsPath', expand = False)
+
+        layout.label(text="Path to 'Missing Texture' file:")
+        colTex = layout.column()
+        colTex.prop(self, 'missingTexPath', expand = False)
+
+modulesNames = ['Importer_UI', 'Importer']
+
 
 modulesFullNames = {}
 for currentModuleName in modulesNames:
@@ -30,12 +78,15 @@ for currentModuleFullName in modulesFullNames.values():
         setattr(globals()[currentModuleFullName], 'modulesNames', modulesFullNames)
  
 def register():
+    bpy.utils.register_class(AddDsPresets)
     for currentModuleName in modulesFullNames.values():
+        print("Registering: " + currentModuleName)
         if currentModuleName in sys.modules:
             if hasattr(sys.modules[currentModuleName], 'register'):
                 sys.modules[currentModuleName].register()
  
 def unregister():
+    bpy.utils.unregister_class(AddDsPresets)
     for currentModuleName in modulesFullNames.values():
         if currentModuleName in sys.modules:
             if hasattr(sys.modules[currentModuleName], 'unregister'):
