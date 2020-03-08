@@ -1,42 +1,47 @@
 import os
 import sys
 import bpy
+
 from bpy.types import Operator
 from bpy.props import FloatVectorProperty
 from bpy_extras.object_utils import AddObjectHelper, object_data_add
 from mathutils import Vector
+from .GetOffsets import(get_flverDataOffsets, get_tpfDataOffsets)
+from .DDS_extract import write_DDSFilesFromOffsets
+from .flver import *
+
+# # Load variables set in addon preferences
+# pathTPFs = bpy.context.preferences.addons["Dark_Souls_Importer"].preferences.tpfPath
+# PathDDSs = bpy.context.preferences.addons["Dark_Souls_Importer"].preferences.ddsPath
+# pathMissingTex = bpy.context.preferences.addons["Dark_Souls_Importer"].preferences.missingTexPath
 
 
 
-# Globals
-filepathImport = ""
-pathTPFs = ""
-pathDDSs = ""
+def read_some_data(context, filepath):
 
-
-
-def read_some_data(context, filepath, use_some_setting):
+    # Load variables set in addon preferences
+    pathTPFs = bpy.context.preferences.addons["Dark_Souls_Importer"].preferences.tpfPath
+    pathDDSs = bpy.context.preferences.addons["Dark_Souls_Importer"].preferences.ddsPath
+    pathMissingTex = bpy.context.preferences.addons["Dark_Souls_Importer"].preferences.missingTexPath
 
     print(filepath)
-    sourceDirectory = "D:/DATA/map/tx/"  # directory .tpf files are found in
-    destination = "D:/DATA/map/dds_files/"  # directory .dds textures export to
 
     fileExtension = os.path.splitext(os.path.split(filepath)[1])[1]
 
     if not fileExtension == '.flver':
-
         flverDataOffsets = get_flverDataOffsets(filepath)
 
         tpfDataOffsets = get_tpfDataOffsets(filepath)
         # extract all .dds textures
         for TPFOffset in tpfDataOffsets:
-            DDS_extract.write_DDSFilesFromOffsets(filepath, sourceDirectory, destination, TPFOffset)
+            write_DDSFilesFromOffsets(filepath, pathTPFs, pathDDSs, TPFOffset)
 
     else:
         flverDataOffsets = [0]
 
     for offset in flverDataOffsets:
-        thisFile = flver.flv_file(filepath, sourceDirectory, destination, offset)
+        print("#########################################")
+        thisFile = flv_file(filepath, pathTPFs, pathDDSs, offset)
         meshInfo = thisFile.get_meshInfo()
         faceTotal = 0
         materialList = thisFile.get_MaterialsForBlender()
@@ -84,7 +89,7 @@ def read_some_data(context, filepath, use_some_setting):
                 diffuse_path = materialList[m]['d1']
                 nameString += "d1"
             except:
-                diffuse_path = "D:/DATA/Missing Image.png"
+                diffuse_path = pathMissingTex
                 nameString += "err1"
 
             try:
@@ -184,50 +189,44 @@ from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
 
 
-class ImportDSModel(Operator, ImportHelper):
-    #Import Dark Souls model from file of type .flver, .objbnd, .partsbnd, or .chrbnd
-
-    bl_label = ""
+class DSIMPORTER_OT_ImportDsData(bpy.types.Operator, ImportHelper):
+    bl_idname = "dsimporter.importdsdata"
     bl_name = "Import DS Data"
-    bl_idname = "mesh.import"
+    bl_label = "Import Mesh"
     bl_options = {"PRESET"}
 
-    # ImportHelper mixin class uses this
-    filename_ext = ".flver"
+    # filename_ext = ".flver"
 
-    filter_glob = StringProperty(
+    filter_glob : StringProperty(
         default="*.flver;*.objbnd;*.partsbnd;*.chrbnd",
         options={'HIDDEN'},
         maxlen=255,
-    )
+        )
 
-    # List of operator properties, the attributes will be assigned
-    # to the class instance from the operator settings before calling.
-    use_setting = BoolProperty(
-        name="Example Boolean",
-        description="Example Tooltip",
-        default=True,
-    )
-
-    type = EnumProperty(
-        name="Example Enum",
-        description="Choose between two items",
-        items=(('OPT_A', "First Option", "Description one"),
-               ('OPT_B', "Second Option", "Description two")),
-        default='OPT_A',
-    )
-
+    filepath: StringProperty(subtype="FILE_PATH")
+    
     def execute(self, context):
-        print(self.filepath)
-        return read_some_data(context, self.filepath, self.use_setting)
+        file = open(self.filepath, 'rb')
+        read_some_data(context, file.name)
+        return {'FINISHED'}
 
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+classes = (
+    DSIMPORTER_OT_ImportDsData,
+)
 
 def register():
-    bpy.utils.register_class(ImportDSModel)
+    for cls in classes:
+        print(cls)
+        bpy.utils.register_class(cls)
 
 
 def unregister():
-    bpy.utils.unregister_class(ImportDSModel)
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
 
 
 

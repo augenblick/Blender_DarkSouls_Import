@@ -28,7 +28,7 @@ class AddDsPresets(bpy.types.AddonPreferences):
         #todo: fill in other info
         )
     ddsPath: bpy.props.StringProperty(
-        default = "C:\\Program Files (x86)\\Steam\\SteamApps\\common\\Dark Souls Prepare to Die Edition\\DATA\\map\\tx\\textures",
+        default = "",
         name = "test",
         description = "description here",
         maxlen = 0,
@@ -37,7 +37,7 @@ class AddDsPresets(bpy.types.AddonPreferences):
         )
 
     missingTexPath: bpy.props.StringProperty(
-        default = "C:\\Program Files (x86)\\Steam\\SteamApps\\common\\Dark Souls Prepare to Die Edition\\DATA\\map\\tx\\textures\\MissingTex.png",
+        default = "",
         name = "test",
         description = "description here",
         maxlen = 0,
@@ -60,7 +60,7 @@ class AddDsPresets(bpy.types.AddonPreferences):
         colTex = layout.column()
         colTex.prop(self, 'missingTexPath', expand = False)
 
-modulesNames = ['Importer_UI', 'Importer']
+modulesNames = ['Importer_UI', 'Importer', 'GetOffsets']
 
 
 modulesFullNames = {}
@@ -84,6 +84,7 @@ def register():
         if currentModuleName in sys.modules:
             if hasattr(sys.modules[currentModuleName], 'register'):
                 sys.modules[currentModuleName].register()
+
  
 def unregister():
     bpy.utils.unregister_class(AddDsPresets)

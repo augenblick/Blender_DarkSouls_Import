@@ -16,6 +16,11 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+
+import importlib
+import bpy.utils.previews
+
+import sys
 import bpy
 import os
 from bpy_extras.io_utils import ImportHelper
@@ -41,7 +46,7 @@ class MyProperties(PropertyGroup):
 
 
 
-class DSIMPORTER_PT_DataPathSettings(Panel):
+class DSIMPORTER_PT_DsInterface(Panel):
     bl_idname = "DSIMPORTER_PT_DataPathSettings"
     bl_label = "Dark Souls Import"
     bl_space_type = "VIEW_3D"   
@@ -69,31 +74,31 @@ class DSIMPORTER_PT_DataPathSettings(Panel):
 #    Operator
 # ------------------------------------------------------------------------
 
-class DSIMPORTER_OT_ImportDsData(bpy.types.Operator, ImportHelper):
-    bl_idname = "dsimporter.importdsdata"
-    bl_name = "Import DS Data"
-    bl_label = "Import Mesh"
-    bl_options = {"PRESET"}
+# class DSIMPORTER_OT_ImportDsData(bpy.types.Operator, ImportHelper):
+    # bl_idname = "dsimporter.importdsdata"
+    # bl_name = "Import DS Data"
+    # bl_label = "Import Mesh"
+    # bl_options = {"PRESET"}
 
-    # filename_ext = ".flver"
+    # # filename_ext = ".flver"
 
-    filter_glob : StringProperty(
-        default="*.flver;*.objbnd;*.partsbnd;*.chrbnd",
-        options={'HIDDEN'},
-        maxlen=255,
-        )
+    # filter_glob : StringProperty(
+        # default="*.flver;*.objbnd;*.partsbnd;*.chrbnd",
+        # options={'HIDDEN'},
+        # maxlen=255,
+        # )
 
-    filepath: StringProperty(subtype="FILE_PATH")
+    # filepath: StringProperty(subtype="FILE_PATH")
     
-    def execute(self, context):
-        file = open(self.filepath, 'rb')
-        print(file.name)
-        return {'FINISHED'}
+    # def execute(self, context):
+        # file = open(self.filepath, 'rb')
+        # print(file.name)
+        # return {'FINISHED'}
 
-    def invoke(self, context, event):
-        print(os.path.join(os.path.dirname(__file__)))
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
+    # def invoke(self, context, event):
+        # print(os.path.join(os.path.dirname(__file__)))
+        # context.window_manager.fileselect_add(self)
+        # return {'RUNNING_MODAL'}
 
 # ------------------------------------------------------------------------
 #    Registration
@@ -101,22 +106,21 @@ class DSIMPORTER_OT_ImportDsData(bpy.types.Operator, ImportHelper):
 
 classes = (
     MyProperties,
-    DSIMPORTER_PT_DataPathSettings,
-    DSIMPORTER_OT_ImportDsData
+    DSIMPORTER_PT_DsInterface,
 )
 
 def register():
-
+    # load custom icon
     global custom_icons
     custom_icons = bpy.utils.previews.new()
     icons_dir = os.path.join(os.path.dirname(__file__), "icons")
     custom_icons.load("custom_icon", os.path.join(icons_dir, "icon.png"), 'IMAGE')
 
+    # register classes
     from bpy.utils import register_class
     for cls in classes:
         print(cls)
         register_class(cls)
-
 
     bpy.types.Scene.my_tool = PointerProperty(type=MyProperties)
 

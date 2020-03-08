@@ -85,6 +85,7 @@ def write_DDSFilesFromOffsets(fileName, sourceDirectory, destination, offset):
 
                 count += 1
 
+                print(saveFilePath)
                 bnd_file.seek(DDS[0] + offset)  # seek to the start of this DDS file's data
                 byteBuffer = bnd_file.read(DDS[1])  # load the DDS data into a buffer
                 if not (os.path.isfile(saveFilePath)):
