@@ -3,13 +3,10 @@
 import bpy
 import struct
 import os
+from .DDS_extract import *
 
 
 
-	# bl_label = "This label do anything?"
-	# bl_name = "Import DS Data"
-	# bl_idname = "mesh.import"
-	# bl_options = {"PRESET"}
 
 def get_numberOfFiles(filePath):
 	return readInt(filePath, 16)
@@ -60,7 +57,7 @@ def get_filePath(BNDfilePath, pathStart, pathEnd):
 		fullFilePath = bnd_file.read(lengthOfFileName)
 		return fullFilePath
 
-@staticmethod
+
 def get_flverDataOffsets(filePath):
 	flverDataOffsetList = []
 	offSetsList = get_filePathOffsetsList(filePath)
