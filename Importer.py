@@ -15,9 +15,9 @@ from .Importer_UI import MyProperties
 def read_some_data(context, filepath):
 
     # Load values set in addon preferences
-    pathTPFs = bpy.context.preferences.addons["Dark_Souls_Importer"].preferences.tpfPath
-    pathDDSs = bpy.context.preferences.addons["Dark_Souls_Importer"].preferences.ddsPath
-    pathMissingTex = bpy.context.preferences.addons["Dark_Souls_Importer"].preferences.missingTexPath
+    pathTPFs = bpy.context.preferences.addons[__package__].preferences.tpfPath
+    pathDDSs = bpy.context.preferences.addons[__package__].preferences.ddsPath
+    pathMissingTex = bpy.context.preferences.addons[__package__].preferences.missingTexPath
 
     useCollections = bpy.context.scene.my_tool.useCollections
     useLegacyNodes = bpy.context.scene.my_tool.useLegacyNodes
