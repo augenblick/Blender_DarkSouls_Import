@@ -1,10 +1,12 @@
-Create new directory "Dark_Souls_Importer" directory in the the Blender <2.8x>\<2.8x>\scripts\addons directory and place all contents there.
+1)   In Blender, visit the Edit > Preferences > Add-ons menu.  From there, select "Install" and navigate to the downloaded zip file (Blender will install the add-on directly from the zipped file-- no need to unzip first).
 
-In Blender, go to Edit > Preference > Add-ons and enable the "Dark Souls Importer" add-on.
+2)   The add-on should then appear in the Add-ons menu-- Be sure to enable it!
 
-Expand the add-on info and set preferences for the three following items:
-	- Directory containing .tpf files: The directory containing .tpf files in the unpacked Dark Souls data
-	- Directory in which to store .dds files: Create a new directory or use an existing directory.  This is where the extracted .dds texture files will be stored.
-	- Path to 'Missing Texture' file: A path to a custom texture that will be used in cases where the add-on is unable to extract or find the required textures.  (A simple UV grid exported from Blender is a good option.)
+3)   After enabling, be sure to expand the add-on info and set the Add-on preferences for the three following items:
+	- .tpf filepath: The directory containing .tpf files in the unpacked Dark Souls data
+	- .dds filepath: Create a new directory or use an existing directory.  This is where the extracted .dds texture files will be stored.
+	- 'Missing Texture' filepath: A path to a custom texture that will be used in cases where the add-on is unable to extract or find the required textures.  This can be any image file of your choosing(A simple UV grid exported from Blender is a good option.)
 
+
+==========================================
 This add-on is a work in progress!
