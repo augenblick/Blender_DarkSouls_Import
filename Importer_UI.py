@@ -24,7 +24,7 @@ import sys
 import bpy
 import os
 from bpy_extras.io_utils import ImportHelper
-from bpy.props import StringProperty, PointerProperty
+from bpy.props import StringProperty, PointerProperty, BoolProperty
 
 from bpy.types import Panel, PropertyGroup
 
@@ -38,7 +38,17 @@ class MyProperties(PropertyGroup):
 					subtype='FILE_PATH'
 	)
 
-
+	useCollections: BoolProperty(
+					name="Use Collections?", 
+					description="Move each imported mesh into its own collection", 
+					default=True
+	)
+	
+	useLegacyNodes: BoolProperty(
+					name="Use Legacy Nodes?", 
+					description="Use legacy nodes in shader graph (as opposed to Principled BSDF)", 
+					default=False
+	)
 
 # ------------------------------------------------------------------------
 #    Panel in Object Mode
@@ -54,6 +64,7 @@ class DSIMPORTER_PT_DsInterface(Panel):
     bl_category = "Dark Souls Import"
     bl_context = "objectmode"
 
+
     def draw(self, context):
 
 
@@ -62,43 +73,14 @@ class DSIMPORTER_PT_DsInterface(Panel):
         mytool = scene.my_tool
 
         layout.separator()
-        layout.label(text = "praise the sun!", icon_value=custom_icons["custom_icon"].icon_id)
+        
+        colOpts = layout.column()
+        colOpts.prop(scene.my_tool, "useCollections")
+        colOpts.prop(scene.my_tool, "useLegacyNodes")
+        layout.separator()
+        layout.label(text = "Praise the Sun!", icon_value=custom_icons["custom_icon"].icon_id)
         layout.operator("dsimporter.importdsdata", text="Import")
 
-
-
-
- 
-
-# ------------------------------------------------------------------------
-#    Operator
-# ------------------------------------------------------------------------
-
-# class DSIMPORTER_OT_ImportDsData(bpy.types.Operator, ImportHelper):
-    # bl_idname = "dsimporter.importdsdata"
-    # bl_name = "Import DS Data"
-    # bl_label = "Import Mesh"
-    # bl_options = {"PRESET"}
-
-    # # filename_ext = ".flver"
-
-    # filter_glob : StringProperty(
-        # default="*.flver;*.objbnd;*.partsbnd;*.chrbnd",
-        # options={'HIDDEN'},
-        # maxlen=255,
-        # )
-
-    # filepath: StringProperty(subtype="FILE_PATH")
-    
-    # def execute(self, context):
-        # file = open(self.filepath, 'rb')
-        # print(file.name)
-        # return {'FINISHED'}
-
-    # def invoke(self, context, event):
-        # print(os.path.join(os.path.dirname(__file__)))
-        # context.window_manager.fileselect_add(self)
-        # return {'RUNNING_MODAL'}
 
 # ------------------------------------------------------------------------
 #    Registration

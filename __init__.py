@@ -21,16 +21,16 @@ class AddDsPresets(bpy.types.AddonPreferences):
 
     tpfPath: bpy.props.StringProperty(
         default = "C:\\Program Files (x86)\\Steam\\SteamApps\\common\\Dark Souls Prepare to Die Edition\\DATA\\map\\tx",
-        name = "test",
-        description = "description here",
+        name = "",
+        description = "The directory containing unpacked Dark Souls .tpf files.  (Usually something like 'C:\\Program Files (x86)\\Steam\\SteamApps\\common\\Dark Souls Prepare to Die Edition\\DATA\\map\\tx')",
         maxlen = 0,
         subtype = 'DIR_PATH'
         #todo: fill in other info
         )
     ddsPath: bpy.props.StringProperty(
         default = "",
-        name = "test",
-        description = "description here",
+        name = "",
+        description = "The directory in which to extract and store .dds texture files.  This can be a newly created directory or an existing one.",
         maxlen = 0,
         subtype = 'DIR_PATH'
         #todo: fill in other info
@@ -38,8 +38,8 @@ class AddDsPresets(bpy.types.AddonPreferences):
 
     missingTexPath: bpy.props.StringProperty(
         default = "",
-        name = "test",
-        description = "description here",
+        name = "",
+        description = "An image file to be use in the place of missing textures. (optional)",
         maxlen = 0,
         subtype = 'FILE_PATH'
         #todo: fill in other info

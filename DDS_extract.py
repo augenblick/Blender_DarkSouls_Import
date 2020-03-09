@@ -100,14 +100,17 @@ def write_DDSFiles(fileNameData, sourceDirectory, destination):
     ddsFileList = []
     count = 0
     fileName = get_tpfPath(fileNameData, sourceDirectory)[0]
+    # print(">>>>>>>>>>>>>>>>" + fileName)
     if (os.path.isfile(fileName)):
         with open(fileName, 'rb') as tpf_File:
             for DDS in get_DDSInfoList(fileName):
+                
                 saveFileName = os.path.split(fileName)[1].split('.')[0]
 
                 # convention seems to be that the first .dds in a .tpf has no suffix.
                 # after the first, file #N carries a suffix of N-1
                 # if count == 0:
+
                 saveFilePath = "{}{}.{}".format(destination, saveFileName, 'dds')
                 ddsFileList.append((saveFilePath, fileNameData[1]))
 
