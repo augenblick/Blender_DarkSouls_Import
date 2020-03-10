@@ -23,7 +23,8 @@ and set the Add-on preferences for the three following items:
 	- [.tpf filepath]
 	- [.dds filepath]
 	- ['Missing Texture' filepath] - (A simple UV grid exported from Blender is a good option.)
-
+	
+IMPORTANT!:  If you enter the paths manually, make sure the .tpf and .dds filepaths end with a backslash "\". 
 Hover your mouse over any fields in Blender to see more info.
 
 === USE ====================================================
