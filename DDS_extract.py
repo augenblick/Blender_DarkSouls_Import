@@ -11,8 +11,6 @@ def get_DDSCount(fileName):
     return DDSCount
 
 # collects offset and datasize info for each DDS file within this TPF file
-
-
 def get_DDSInfoList(fileName):
     numDDSFiles = get_DDSCount(fileName)
     DDSInfoFormat = "IIIII"
@@ -38,9 +36,7 @@ def get_tpfPath(fileName, sourceDirectory):
     tpfFileName = "{}{}.tpf".format(sourceDirectory, fileNoExtension[0])
     return (tpfFileName, fileName[1])
 
-    # extracts every DDS file within this TPF file
-
-
+# extracts every DDS file within this TPF file
 def write_DDSFilesFromOffsets(fileName, sourceDirectory, destination, offset):
     DDSInfoList = []
     with open(fileName, 'rb') as bnd_file:
@@ -102,15 +98,15 @@ def write_DDSFiles(fileNameData, sourceDirectory, destination):
     if (os.path.isfile(fileName)):
         with open(fileName, 'rb') as tpf_File:
             for DDS in get_DDSInfoList(fileName):
+                
                 saveFileName = os.path.split(fileName)[1].split('.')[0]
 
                 # convention seems to be that the first .dds in a .tpf has no suffix.
                 # after the first, file #N carries a suffix of N-1
                 # if count == 0:
+
                 saveFilePath = "{}{}.{}".format(destination, saveFileName, 'dds')
                 ddsFileList.append((saveFilePath, fileNameData[1]))
-
-                # count += 1
 
                 tpf_File.seek(DDS[0])  # seek to the start of this DDS file's data
                 byteBuffer = tpf_File.read(DDS[1])  # load the DDS data into a buffer
