@@ -181,7 +181,7 @@ def read_some_data(context, filepath):
                             bpy.context.object.active_material.blend_method = 'HASHED'
                             bpy.context.object.active_material.shadow_method = 'HASHED'
                         except:
-                            # print("Unable to set transparency")
+                            print("Unable to set transparency")
 
 
 
