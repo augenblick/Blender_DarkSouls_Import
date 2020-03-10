@@ -1,8 +1,26 @@
+# ##### BEGIN GPL LICENSE BLOCK #####
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software Foundation,
+#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+# ##### END GPL LICENSE BLOCK #####
+
 bl_info = {
     'name': 'Dark Souls Importer',
     "description": "Imports Dark Souls environment, character, and object models from unpacked game data files",
     "author": "Nathan Grubbs",
-    "location": "3D View > Tools",
+    "location": "3D Viewport > 'N' Toolbar > Dark Souls Importer",
     'category': 'Import-Export',
     'version': (0, 2, 0),
     'blender': (2, 80, 0)
@@ -17,20 +35,19 @@ icons_dict = bpy.utils.previews.new()
 
 
 class AddDsPresets(bpy.types.AddonPreferences):
-    bl_idname = __package__  # "__name__" for single-file addon, "__package__" for multi-file
+    bl_idname = __package__
 
     tpfPath: bpy.props.StringProperty(
-        default = "C:\\Program Files (x86)\\Steam\\SteamApps\\common\\Dark Souls Prepare to Die Edition\\DATA\\map\\tx",
+        default = "",
         name = "",
-        description = "The directory containing unpacked Dark Souls .tpf files.  (Usually something like 'C:\\Program Files (x86)\\Steam\\SteamApps\\common\\Dark Souls Prepare to Die Edition\\DATA\\map\\tx')",
+        description = "The directory containing unpacked Dark Souls .tpf files.  (Typically something like 'C:\\Program Files (x86)\\Steam\\SteamApps\\common\\Dark Souls Prepare to Die Edition\\DATA\\map\\tx')",
         maxlen = 0,
         subtype = 'DIR_PATH'
-        #todo: fill in other info
         )
     ddsPath: bpy.props.StringProperty(
         default = "",
         name = "",
-        description = "The directory in which to extract and store .dds texture files.  This can be a newly created directory or an existing one.",
+        description = "The directory in which .dds texture files will be extracted and stored.  This can be a newly created directory or an existing one.",
         maxlen = 0,
         subtype = 'DIR_PATH'
         #todo: fill in other info
@@ -80,7 +97,6 @@ for currentModuleFullName in modulesFullNames.values():
 def register():
     bpy.utils.register_class(AddDsPresets)
     for currentModuleName in modulesFullNames.values():
-        print("Registering: " + currentModuleName)
         if currentModuleName in sys.modules:
             if hasattr(sys.modules[currentModuleName], 'register'):
                 sys.modules[currentModuleName].register()

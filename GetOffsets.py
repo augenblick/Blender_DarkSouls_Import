@@ -30,7 +30,6 @@ def get_directoryList(filePath):
 		for n in range(numberOfFiles):
 			thisDirectoryListing = struct.unpack(directoryfmt, bnd_file.read(24))
 			directoryList.append(thisDirectoryListing)
-			# print(thisDirectoryListing)
 	return directoryList
 
 def get_filePathOffsetsList(filePath):
@@ -94,15 +93,3 @@ def isTPF(filePath):
 		return True
 	else:
 		return False
-
-
-
-# def register():
-    # bpy.utils.register_class(GetOffsets)
-
-
-# def unregister():
-    # bpy.utils.unregister_class(GetOffsets)
-
-# if __name__ == "__main__":
-    # register()

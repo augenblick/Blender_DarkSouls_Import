@@ -3,8 +3,9 @@ import sys
 import bpy
 
 from bpy.types import Operator
-from bpy.props import FloatVectorProperty
+from bpy.props import FloatVectorProperty, StringProperty, BoolProperty, EnumProperty
 from bpy_extras.object_utils import AddObjectHelper, object_data_add
+from bpy_extras.io_utils import ImportHelper
 from mathutils import Vector
 from .GetOffsets import(get_flverDataOffsets, get_tpfDataOffsets)
 from .DDS_extract import write_DDSFilesFromOffsets
@@ -21,9 +22,6 @@ def read_some_data(context, filepath):
 
     useCollections = bpy.context.scene.my_tool.useCollections
     useLegacyNodes = bpy.context.scene.my_tool.useLegacyNodes
-    if (useLegacyNodes):
-        print("Legacy Nodes being used")
-    print(filepath)
 
     fileExtension = os.path.splitext(os.path.split(filepath)[1])[1]
     meshName = os.path.splitext(os.path.split(filepath)[1])[0]
@@ -46,7 +44,6 @@ def read_some_data(context, filepath):
         currentCollection.children.link(newCollection)
 
     for offset in flverDataOffsets:
-        print("#########################################")
         thisFile = flv_file(filepath, pathTPFs, pathDDSs, offset)
         meshInfo = thisFile.get_meshInfo()
         faceTotal = 0
@@ -75,7 +72,7 @@ def read_some_data(context, filepath):
             newObj = object_data_add(context, mesh)
 
             if (useCollections):
-                # Link object to collection
+                # Link object to new collection
                 oldObjCollection = newObj.users_collection[0]
                 newCollection.objects.link(newObj)
 
@@ -117,11 +114,9 @@ def read_some_data(context, filepath):
                 nameString += "n1"
             except:
                 normal_path = ""
-                # print(materialList)
 
             try:
                 specular_path = materialList[m]['s1']
-                # print(specular_path)
                 nameString += "s1"
             except:
                 specular_path = ""
@@ -163,7 +158,6 @@ def read_some_data(context, filepath):
                         if normal_path != "":
                             normTexture = nodes.new("ShaderNodeTexImage")
                             normTexture.image = bpy.data.images.load(normal_path)
-                            # normTexture.color_mapping = 'Non-Color'
                             normalMapNode = nodes.new("ShaderNodeNormalMap")
 
                         # set up transparency
@@ -180,14 +174,14 @@ def read_some_data(context, filepath):
                         for index, node in enumerate((diffTexture, diffuse, output, alphaMix)):
                             node.location.x = 200.0 * index
                             node.location.y = 100.0 * index
-                        print("adding " + mat_name + " texture to " + str(bpy.context.active_object))
+                        # print("adding " + mat_name + " texture to " + str(bpy.context.active_object))
                         bpy.context.active_object.data.materials.append(mat)
 
                         try:
                             bpy.context.object.active_material.blend_method = 'HASHED'
                             bpy.context.object.active_material.shadow_method = 'HASHED'
                         except:
-                            print("Unable to set transparency")
+                            # print("Unable to set transparency")
 
 
 
@@ -206,7 +200,7 @@ def read_some_data(context, filepath):
                         links.new(diffTexture.outputs['Alpha'], alphaMix.inputs[0])              # diffuse alpha to mix factor
                         links.new(principled.outputs['BSDF'], alphaMix.inputs[2])                # principled to mix
                         links.new(transparent.outputs['BSDF'], alphaMix.inputs[1])               # transparent to mix
-                        links.new(alphaMix.outputs['Shader'], output.inputs['Surface'])
+                        links.new(alphaMix.outputs['Shader'], output.inputs['Surface'])          # Mixed Shader to output node
 
                         # set up normal map
                         if normal_path != "":
@@ -242,16 +236,7 @@ def read_some_data(context, filepath):
                 else:
                     print("Textures missing")
 
-        # bpy.context.scene.objects.active = bpy.data.objects[meshName]
-        # bpy.ops.collection.objects_add_active(collection=meshName)
     return {'FINISHED'}
-
-
-# ImportHelper is a helper class, defines filename and
-# invoke() function which calls the file selector.
-from bpy_extras.io_utils import ImportHelper
-from bpy.props import StringProperty, BoolProperty, EnumProperty
-from bpy.types import Operator
 
 
 class DSIMPORTER_OT_ImportDsData(bpy.types.Operator, ImportHelper):
@@ -285,7 +270,6 @@ classes = (
 
 def register():
     for cls in classes:
-        print(cls)
         bpy.utils.register_class(cls)
 
 

@@ -11,8 +11,6 @@ def get_DDSCount(fileName):
     return DDSCount
 
 # collects offset and datasize info for each DDS file within this TPF file
-
-
 def get_DDSInfoList(fileName):
     numDDSFiles = get_DDSCount(fileName)
     DDSInfoFormat = "IIIII"
@@ -38,9 +36,7 @@ def get_tpfPath(fileName, sourceDirectory):
     tpfFileName = "{}{}.tpf".format(sourceDirectory, fileNoExtension[0])
     return (tpfFileName, fileName[1])
 
-    # extracts every DDS file within this TPF file
-
-
+# extracts every DDS file within this TPF file
 def write_DDSFilesFromOffsets(fileName, sourceDirectory, destination, offset):
     DDSInfoList = []
     with open(fileName, 'rb') as bnd_file:
@@ -85,7 +81,6 @@ def write_DDSFilesFromOffsets(fileName, sourceDirectory, destination, offset):
 
                 count += 1
 
-                print(saveFilePath)
                 bnd_file.seek(DDS[0] + offset)  # seek to the start of this DDS file's data
                 byteBuffer = bnd_file.read(DDS[1])  # load the DDS data into a buffer
                 if not (os.path.isfile(saveFilePath)):
@@ -100,7 +95,6 @@ def write_DDSFiles(fileNameData, sourceDirectory, destination):
     ddsFileList = []
     count = 0
     fileName = get_tpfPath(fileNameData, sourceDirectory)[0]
-    # print(">>>>>>>>>>>>>>>>" + fileName)
     if (os.path.isfile(fileName)):
         with open(fileName, 'rb') as tpf_File:
             for DDS in get_DDSInfoList(fileName):
@@ -113,8 +107,6 @@ def write_DDSFiles(fileNameData, sourceDirectory, destination):
 
                 saveFilePath = "{}{}.{}".format(destination, saveFileName, 'dds')
                 ddsFileList.append((saveFilePath, fileNameData[1]))
-
-                # count += 1
 
                 tpf_File.seek(DDS[0])  # seek to the start of this DDS file's data
                 byteBuffer = tpf_File.read(DDS[1])  # load the DDS data into a buffer

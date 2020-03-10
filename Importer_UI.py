@@ -1,22 +1,3 @@
-# ##### BEGIN GPL LICENSE BLOCK #####
-#
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; version 2
-#  of the License.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software Foundation,
-#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-#
-# ##### END GPL LICENSE BLOCK #####
-
-
 import importlib
 import bpy.utils.previews
 
@@ -50,12 +31,8 @@ class MyProperties(PropertyGroup):
 					default=False
 	)
 
-# ------------------------------------------------------------------------
-#    Panel in Object Mode
-# ------------------------------------------------------------------------
 
-
-
+# custom GUI element
 class DSIMPORTER_PT_DsInterface(Panel):
     bl_idname = "DSIMPORTER_PT_DataPathSettings"
     bl_label = "Dark Souls Import"
@@ -82,9 +59,7 @@ class DSIMPORTER_PT_DsInterface(Panel):
         layout.operator("dsimporter.importdsdata", text="Import")
 
 
-# ------------------------------------------------------------------------
-#    Registration
-# ------------------------------------------------------------------------
+# register everything ------------------------------------
 
 classes = (
     MyProperties,
@@ -101,7 +76,6 @@ def register():
     # register classes
     from bpy.utils import register_class
     for cls in classes:
-        print(cls)
         register_class(cls)
 
     bpy.types.Scene.my_tool = PointerProperty(type=MyProperties)
