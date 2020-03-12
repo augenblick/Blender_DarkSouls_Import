@@ -22,6 +22,8 @@ def read_some_data(context, filepath):
 
     useCollections = bpy.context.scene.my_tool.useCollections
     useLegacyNodes = bpy.context.scene.my_tool.useLegacyNodes
+    matSpecular = bpy.context.scene.my_tool.specular
+    matRoughness = bpy.context.scene.my_tool.roughness
 
     fileExtension = os.path.splitext(os.path.split(filepath)[1])[1]
     meshName = os.path.splitext(os.path.split(filepath)[1])[0]
@@ -144,6 +146,8 @@ def read_some_data(context, filepath):
 
                     if (useLegacyNodes):
 
+                    # Create materials without use of the Principled BSDF node
+
                         # create shader nodes for transparency
                         output = nodes.new("ShaderNodeOutputMaterial")
                         transparent = nodes.new("ShaderNodeBsdfTransparent")
@@ -216,10 +220,30 @@ def read_some_data(context, filepath):
                             specTexture.image = bpy.data.images.load(specular_path)
                             links.new(principled.inputs['Specular'], specTexture.outputs['Color'])
 
-                        # spread out the nodes a bit (crude method)
-                        for index, node in enumerate((diffTexture, principled, output, alphaMix)):
-                            node.location.x = 200.0 * index
-                            node.location.y = 100.0 * index
+                        # spread out the nodes a bit (not working well in most cases)
+
+                        principled.location.x = 740
+                        principled.location.y = 200
+                        output.location.x = 925
+                        output.location.y = 200
+                        transparent.location.x = 800
+                        transparent.location.y = 185
+                        alphaMix.location.x = 850
+                        alphaMix.location.y = 225
+                        diffTexture.location.x = 640
+                        diffTexture.location.y = 230
+
+                        if 'normTexture' in locals():
+                            normTexture.location.x = 590
+                            normTexture.location.y = 85
+
+                        if 'specTexture' in locals():
+                            specTexture.location.x = 560
+                            specTexture.location.y = 160
+
+                        # set Specular and Roughness values on the Principled BSDF node
+                        principled.inputs[5].default_value = matSpecular
+                        principled.inputs[7].default_value = matRoughness
 
                         bpy.context.active_object.data.materials.append(mat)
 

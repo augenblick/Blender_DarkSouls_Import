@@ -5,7 +5,7 @@ import sys
 import bpy
 import os
 from bpy_extras.io_utils import ImportHelper
-from bpy.props import StringProperty, PointerProperty, BoolProperty
+from bpy.props import StringProperty, PointerProperty, BoolProperty, FloatProperty
 
 from bpy.types import Panel, PropertyGroup
 
@@ -30,6 +30,28 @@ class MyProperties(PropertyGroup):
 					description="Use legacy nodes in shader graph (as opposed to Principled BSDF)", 
 					default=False
 	)
+	
+	specular: FloatProperty(
+					name="Material Specular",
+					description="Unless 'Use Legacy Nodes' is checked, all imported mesh materials will default to this Specular value",
+					default=0.5, 
+					min=-3.402823e+38, 
+					max=3.402823e+38, 
+					soft_min=0.0, 
+					soft_max=1.0, 
+	)
+
+					
+	roughness: FloatProperty(
+				name="Material Roughness",
+				description="Unless 'Use Legacy Nodes' is checked, all imported mesh materials will default to this Roughness value",
+				default=0.5, 
+				min=-3.402823e+38, 
+				max=3.402823e+38, 
+				soft_min=0.0, 
+				soft_max=1.0, 
+	)
+
 
 
 # custom GUI element
@@ -54,6 +76,8 @@ class DSIMPORTER_PT_DsInterface(Panel):
         colOpts = layout.column()
         colOpts.prop(scene.my_tool, "useCollections")
         colOpts.prop(scene.my_tool, "useLegacyNodes")
+        colOpts.prop(scene.my_tool, "specular")
+        colOpts.prop(scene.my_tool, "roughness")
         layout.separator()
         layout.label(text = "Praise the Sun!", icon_value=custom_icons["custom_icon"].icon_id)
         layout.operator("dsimporter.importdsdata", text="Import")
