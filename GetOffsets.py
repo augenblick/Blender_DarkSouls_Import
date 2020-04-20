@@ -91,9 +91,3 @@ def isTPF(filePath):
         return True
     else:
         return False
-
-
-BNDFileName = 'D:/DATA/obj/o0200.objbnd'
-print(get_flverDataOffsets(BNDFileName))
-print("tpf:")
-print(get_tpfDataOffsets(BNDFileName))
