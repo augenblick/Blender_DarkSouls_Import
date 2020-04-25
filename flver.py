@@ -12,26 +12,36 @@ from . import DDS_extract
 class flv_file:
 
     def __init__(self, fileName, sourceDirectory, destination, masterOffset):
+
+        # fileName = path to flver, chrbnd, etc. file
+        # sourceDirectory = path to .tpf directory
+        # destination = path to directory for extracted .dds files
+        # masterOffset = offset to flver data within *bnd files (0 if flver file)
+
+
         self.fileName = fileName
         self.sourceDirectory = sourceDirectory
         self.destination = destination
 
         self.masterOffset = masterOffset
 
+        # Get that sweet header data (of format '5sxsxHHIIIIIIIffffffIIIIIIII')
         self.header_data = self.header_parse(self.fileName)
-        self.data_offset = self.header_data[4] + self.masterOffset
-        self.data_length = self.header_data[5]
-        self.hitbox_count = self.header_data[6]
-        self.mater_count = self.header_data[7]
-        self.bone_count = self.header_data[8]
-        self.mesh_count = self.header_data[9]
-        self.vertInfo_count = self.header_data[10]
-        # 6 unknown floats here...
-        # 4 unknown ints here...
-        self.faceSet_count = self.header_data[21]
-        self.vertDesc_count = self.header_data[22]
-        self.texture_count = self.header_data[23]
-        # 9 unknown ints here...
+
+        # obtain separate header elements from the header data
+        self.data_offset = self.header_data[4] + self.masterOffset          # offset to start of data
+        self.data_length = self.header_data[5]                              # size of data in bytes
+        self.hitbox_count = self.header_data[6]                             # count of hitboxes
+        self.mater_count = self.header_data[7]                              # count of materials
+        self.bone_count = self.header_data[8]                               # count of bones
+        self.mesh_count = self.header_data[9]                               # count of meshes
+        self.vertInfo_count = self.header_data[10]                          # count of vertex infos
+        # 6 unknown floats here                                             # bounding box info?
+        # 4 unknown ints here
+        self.faceSet_count = self.header_data[21]                           # count of face sets
+        self.vertDesc_count = self.header_data[22]                          # count of vertex descriptions
+        self.texture_count = self.header_data[23]                           # count of textures
+        # 9 unknown ints here
 
         self.UVInfoList = []
         self.vertStructInfo = self.get_vertStructInfo()
@@ -54,11 +64,25 @@ class flv_file:
 
     # parses the header of the flver file
     def header_parse(self, fileName):
+
+        # common struct types specified as follows:
+        # x = pad byte
+        # c = char
+        # h = short (2 bytes)
+        # H = unsigned short (2 bytes)
+        # i = int (4 bytes)
+        # I = unsigned int (4 bytes)
+        # f = float
+        # s = string (prefixed with length - defaults to '1')
+
+        # define struct format
         header_fmt = "5sxsxHHIIIIIIIffffffIIIIIIII"
+        # specify length of struct
         head_length = struct.calcsize(header_fmt)
 
         with open(self.fileName, 'rb') as flver_file:
             flver_file.seek(self.masterOffset)
+            # unpack data at given location into struct
             top_data = struct.unpack(header_fmt, flver_file.read(head_length))
         return top_data
 
@@ -189,6 +213,7 @@ class flv_file:
         return materialList
 
     # returns count of highest face in a given set of faces
+    # TODO: Check whether this is in use anywhere
     def get_HighestFace(self, faceset):
         highest = 0
         for face in faceset:
@@ -553,3 +578,6 @@ class flv_file:
                 outerEdgeSet.add(edge3)
 
         return outerEdgeSet
+
+
+
