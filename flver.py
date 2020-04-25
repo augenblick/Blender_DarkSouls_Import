@@ -1,7 +1,8 @@
 import struct
 import binascii
 import os
-from . import DDS_extract
+#from .
+import DDS_extract
 
 # a script to provide Blender with the data it needs to create a 3D model from Dark Souls data
 # author: Nathan Grubbs
@@ -34,27 +35,26 @@ class flv_file:
         self.hitbox_count = self.header_data[6]                             # count of hitboxes
         self.mater_count = self.header_data[7]                              # count of materials
         self.bone_count = self.header_data[8]                               # count of bones
-        self.mesh_count = self.header_data[9]                               # count of meshes
-        self.vertInfo_count = self.header_data[10]                          # count of vertex infos
+        self.mesh_count = self.header_data[9]                               # count of meshes in this file
+        self.vertInfo_count = self.header_data[10]                          # count of vertex infos TODO: explain this
         # 6 unknown floats here                                             # bounding box info?
         # 4 unknown ints here
         self.faceSet_count = self.header_data[21]                           # count of face sets
-        self.vertDesc_count = self.header_data[22]                          # count of vertex descriptions
+        self.vertDesc_count = self.header_data[22]                          # count of vertex descriptions TODO: explain this
         self.texture_count = self.header_data[23]                           # count of textures
         # 9 unknown ints here
 
         self.UVInfoList = []
-        self.vertStructInfo = self.get_vertStructInfo()
+        self.vertStructInfo = self.get_vertStructInfo()                     # contains two values per vertex set: number of datapoints per vertex, and offset to location that describes datapoints
 
         self.vertStructs = self.get_vertStructs()
 
-        self.MeshVert_info = self.get_MeshVert_info()
+        self.MeshVert_info = self.get_MeshVert_info()                       # info about vertices in each mesh (offset, format, total size, etc.)
         self.meshInfo = self.get_meshInfo()
         self.allVerts = []
 
         for m in range(0, self.mesh_count):
             Verts = self.get_Vertices(self.vertStructs[self.MeshVert_info[m][1]], self.data_offset + self.MeshVert_info[m][7], self.MeshVert_info[m][3])
-
             self.allVerts.append(Verts)
 
         self.allFaceSets = self.get_faceSets()
@@ -244,7 +244,10 @@ class flv_file:
                 self.meshInfo.append(thisMeshInfo)
         return self.meshInfo
 
-    # returns info on the vertex structs in this file (struct number, offset)
+    # returns info on the vertex structs in this file
+    # contains two values per vertex set:
+    # 1 - number of datapoints included in each vertex set
+    # 2 - offset (from data_offset) of the data that describes the type and format of each datapoint
     def get_vertStructInfo(self):
 
         fmt = "IxxxxxxxxI"
@@ -260,13 +263,26 @@ class flv_file:
                 vertStructInfo.append(thisVertStructInfo)
         return vertStructInfo
 
-    # retrieves list of information on every set of Vertices in this file
+    # retrieves list of information on every set of Vertices in this file (one vertex set per mesh)
+    # there are 8 values per vertex set stored in MesVert_info.
+    # The values are as follows:
+        # 1 - unknown
+        # 2 - vertex format (an index into self.vertStructs).
+        # 3 - byte size of data for each vertex in this set
+        # 4 - number of vertices in this vertex set
+        # 5 - unknown
+        # 6 - unknown
+        # 7 - total byte size of this vertex set
+        # 8 - offset to start of the data for this vertex set (starting from self.data_offset)
     def get_MeshVert_info(self):
         fmt = "IIIIIIII"
         fmt_size = struct.calcsize(fmt)
         mesh_infoList = []
+
+        # offset to mesh vertex data
         MVInfo_offset = 128 + (self.hitbox_count * 64) + (128 * self.bone_count) + (48 * self.mesh_count) + (32 * self.mater_count) + (32 * self.faceSet_count)
 
+        # obtain the data for each vertex set in this file
         with open(self.fileName, 'rb') as flver_file:
             flver_file.seek(MVInfo_offset + self.masterOffset)
             for i in range(0, self.mesh_count):
@@ -289,6 +305,7 @@ class flv_file:
         return vertInfo
 
     # defines the vertex structs used in this file
+    # Checks 5 ints to determine what the structure of the vertex data for each set is.
     def get_vertStructs(self):
 
         fmt = "IIIII"
@@ -301,17 +318,26 @@ class flv_file:
             count = 0
             vertStructs = []
 
-            for i in self.get_vertStructInfo():
+            for currentVertStructInfo in self.get_vertStructInfo():
+                # (self.get_vertStructInfo() returns a collection that contains the number of
+                # datapoints and the offset to type and format of each datapoint for each vertex set
 
-                thisDiffUVInfo = [0, -1]  # (exists?, position in struct)
-                thisLMUVInfo = [0, -1]  # (exists?, position in struct)
-                thisUVInfoGroup = []
+                thisDiffUVInfo = [0, -1]    # Diffuse UV info (exist flag, position in struct)
+                thisLMUVInfo = [0, -1]      # lightmap UV info  (exist flag, position in struct)
+                thisUVInfoGroup = []        # will hold DiffUVInfo and LMUVInfo
                 currentPosition = -1
                 currentVertStruct = ""
 
-                flver_file.seek(i[1] + self.masterOffset)
-                for j in range(0, i[0]):
+                # unpack
+                flver_file.seek(currentVertStructInfo[1] + self.masterOffset)
+                for j in range(0, currentVertStructInfo[0]):
                     thisVertInfo = struct.unpack(fmt, flver_file.read(fmt_length))
+                    # thisVertInfo = five values as follows:
+                    # 1 - unknown
+                    # 2 - offset to this data within the data for a given vertex
+                    # 3 - primary type  (sufficient to identify type in all but two cases)
+                    # 4 - secondary type    (only checked if primary type = '19')
+                    # 5 - unknown
                     if thisVertInfo[2] == 2:  # position
                         currentPosition += 3
                         currentVertStruct += "fff"
@@ -349,7 +375,6 @@ class flv_file:
                         elif thisVertInfo[3] == 7:
                             currentPosition += 1
                             currentVertStruct += "I"  # don't know what this one is yet! (4 bytes in size)
-
                     tempList.append(thisVertInfo)
 
                 count += 1
@@ -364,7 +389,9 @@ class flv_file:
 
     # returns a list of all vertex info for every vertex in a given set of vertices
     def get_Vertices(self, VertFmt, offset, count):
-
+        # VertFmt = struct defining the data included with each vertex for this vertex set
+        # offset = offset to start of vertex set
+        # count = number of vertices in this set
         fmt_size = struct.calcsize(VertFmt)
         vertList = []
 
