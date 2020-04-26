@@ -1,8 +1,7 @@
 import struct
 import binascii
 import os
-#from .
-import DDS_extract
+from . import DDS_extract
 
 # a script to provide Blender with the data it needs to create a 3D model from Dark Souls data
 # author: Nathan Grubbs
@@ -36,25 +35,30 @@ class flv_file:
         self.mater_count = self.header_data[7]                              # count of materials
         self.bone_count = self.header_data[8]                               # count of bones
         self.mesh_count = self.header_data[9]                               # count of meshes in this file
-        self.vertInfo_count = self.header_data[10]                          # count of vertex infos TODO: explain this
+
+        self.vertInfo_count = self.header_data[10]                          # count of vertex infos TODO: Is this ever different from mesh count?
         # 6 unknown floats here                                             # bounding box info?
         # 4 unknown ints here
         self.faceSet_count = self.header_data[21]                           # count of face sets
         self.vertDesc_count = self.header_data[22]                          # count of vertex descriptions TODO: explain this
+
         self.texture_count = self.header_data[23]                           # count of textures
         # 9 unknown ints here
 
         self.UVInfoList = []
-        self.vertStructInfo = self.get_vertStructInfo()                     # contains two values per vertex set: number of datapoints per vertex, and offset to location that describes datapoints
+        self.vertDataDescriptionPointers = self.get_vertDataDescriptionPointers()           # contains two values per vertex set: number of datapoints per vertex,
+                                                                                            # and offset to location that describes datapoints
 
-        self.vertStructs = self.get_vertStructs()
+        self.vertStructFormats = self.get_vertStructFormats()               # struct formats for vertex data in this file
 
         self.MeshVert_info = self.get_MeshVert_info()                       # info about vertices in each mesh (offset, format, total size, etc.)
+
         self.meshInfo = self.get_meshInfo()
+
         self.allVerts = []
 
         for m in range(0, self.mesh_count):
-            Verts = self.get_Vertices(self.vertStructs[self.MeshVert_info[m][1]], self.data_offset + self.MeshVert_info[m][7], self.MeshVert_info[m][3])
+            Verts = self.get_Vertices(self.vertStructFormats[self.MeshVert_info[m][1]], self.data_offset + self.MeshVert_info[m][7], self.MeshVert_info[m][3])
             self.allVerts.append(Verts)
 
         self.allFaceSets = self.get_faceSets()
@@ -66,14 +70,14 @@ class flv_file:
     def header_parse(self, fileName):
 
         # common struct types specified as follows:
-        # x = pad byte
-        # c = char
-        # h = short (2 bytes)
-        # H = unsigned short (2 bytes)
-        # i = int (4 bytes)
-        # I = unsigned int (4 bytes)
-        # f = float
-        # s = string (prefixed with length - defaults to '1')
+            # x = pad byte
+            # c = char
+            # h = short (2 bytes)
+            # H = unsigned short (2 bytes)
+            # i = int (4 bytes)
+            # I = unsigned int (4 bytes)
+            # f = float
+            # s = string (prefixed with length - defaults to '1')
 
         # define struct format
         header_fmt = "5sxsxHHIIIIIIIffffffIIIIIIII"
@@ -140,6 +144,7 @@ class flv_file:
         return
 
     # retrieves list of information on every texture in this file
+    # TODO: explain in more detail
     def get_TextureAddressList(self):
         textureAddressList = []
         textureAddress_fmt = "IIffIIII"
@@ -246,28 +251,29 @@ class flv_file:
 
     # returns info on the vertex structs in this file
     # contains two values per vertex set:
-    # 1 - number of datapoints included in each vertex set
-    # 2 - offset (from data_offset) of the data that describes the type and format of each datapoint
-    def get_vertStructInfo(self):
+        # 1 - number of datapoints included in each vertex set
+        # 2 - offset (from data_offset) of the data that describes the type and format of each datapoint
+    def get_vertDataDescriptionPointers(self):
 
         fmt = "IxxxxxxxxI"
         vertInfo_length = struct.calcsize(fmt)
         offset = 128 + (self.hitbox_count * 64) + (128 * self.bone_count) + (80 * self.mesh_count) + (32 * self.mater_count) + (32 * self.faceSet_count)  # offset of the vert. struct info
-        vertStructInfo = []
+        vertDataDescriptionPointers = []
 
         with open(self.fileName, 'rb') as flver_file:
             flver_file.seek(offset + self.masterOffset)  # seek to the offset of the vert. struct info
 
             for i in range(0, self.vertDesc_count):
-                thisVertStructInfo = struct.unpack(fmt, flver_file.read(vertInfo_length))
-                vertStructInfo.append(thisVertStructInfo)
-        return vertStructInfo
+                thisvertDataDescriptionPointers = struct.unpack(fmt, flver_file.read(vertInfo_length))
+                vertDataDescriptionPointers.append(thisvertDataDescriptionPointers)
 
-    # retrieves list of information on every set of Vertices in this file (one vertex set per mesh)
+        return vertDataDescriptionPointers
+
+    # retrieves list of information on every set of Vertices in this file
     # there are 8 values per vertex set stored in MesVert_info.
     # The values are as follows:
         # 1 - unknown
-        # 2 - vertex format (an index into self.vertStructs).
+        # 2 - vertex format (an index into self.vertStructFormats).
         # 3 - byte size of data for each vertex in this set
         # 4 - number of vertices in this vertex set
         # 5 - unknown
@@ -290,6 +296,8 @@ class flv_file:
                 mesh_infoList.append(thisMeshVert_info)
         return mesh_infoList
 
+    # TODO: determine if this is in use anywhere
+    # NOTE: this returns the same thing as self.get_MeshVert_info() with the unknown/unused values discarded
     def get_vertInfo(self):
         fmt = "xxxxxxxxIIxxxxxxxxII"
         vertInfo_length = struct.calcsize(fmt)
@@ -302,11 +310,12 @@ class flv_file:
             for i in range(0, self.mesh_count):
                 thisVertInfo = struct.unpack(fmt, flver_file.read(vertInfo_length))
                 vertInfo.append(thisVertInfo)
+
         return vertInfo
 
     # defines the vertex structs used in this file
     # Checks 5 ints to determine what the structure of the vertex data for each set is.
-    def get_vertStructs(self):
+    def get_vertStructFormats(self):
 
         fmt = "IIIII"
         fmt_length = struct.calcsize(fmt)
@@ -316,10 +325,10 @@ class flv_file:
 
         with open(self.fileName, 'rb') as flver_file:
             count = 0
-            vertStructs = []
+            vertStructFormats = []
 
-            for currentVertStructInfo in self.get_vertStructInfo():
-                # (self.get_vertStructInfo() returns a collection that contains the number of
+            for currentvertDataDescriptionPointers in self.get_vertDataDescriptionPointers():
+                # (self.get_vertDataDescriptionPointers() returns a collection that contains the number of
                 # datapoints and the offset to type and format of each datapoint for each vertex set
 
                 thisDiffUVInfo = [0, -1]    # Diffuse UV info (exist flag, position in struct)
@@ -329,8 +338,8 @@ class flv_file:
                 currentVertStruct = ""
 
                 # unpack
-                flver_file.seek(currentVertStructInfo[1] + self.masterOffset)
-                for j in range(0, currentVertStructInfo[0]):
+                flver_file.seek(currentvertDataDescriptionPointers[1] + self.masterOffset)
+                for j in range(0, currentvertDataDescriptionPointers[0]):
                     thisVertInfo = struct.unpack(fmt, flver_file.read(fmt_length))
                     # thisVertInfo = five values as follows:
                     # 1 - unknown
@@ -378,14 +387,14 @@ class flv_file:
                     tempList.append(thisVertInfo)
 
                 count += 1
-                vertStructs.append(currentVertStruct)
+                vertStructFormats.append(currentVertStruct)
                 thisUVInfoGroup.append(thisDiffUVInfo)
                 thisUVInfoGroup.append(thisLMUVInfo)
                 UVInfoList.append(thisUVInfoGroup)
 
         self.UVInfoList = UVInfoList
         self.VertNormalInfoList = VertNormalInfoList
-        return vertStructs
+        return vertStructFormats
 
     # returns a list of all vertex info for every vertex in a given set of vertices
     def get_Vertices(self, VertFmt, offset, count):
@@ -486,7 +495,6 @@ class flv_file:
             thisVert.append(vert[1])  # append y
             vertList.append(thisVert)
 
-        # implement error handling at some point (in event requested vertset not present in file)
         return vertList
 
     # returns face indices for a given faceset
