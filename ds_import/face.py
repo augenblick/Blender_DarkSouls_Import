@@ -1,4 +1,4 @@
-import vertex
+from blender_darksouls_import import vertex
 
 
 class Face:

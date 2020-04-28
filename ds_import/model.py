@@ -1,6 +1,6 @@
-import mesh
-import vertex
-import face
+from blender_darksouls_import import mesh
+from blender_darksouls_import import vertex
+from blender_darksouls_import import face
 
 
 class Model:
