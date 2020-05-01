@@ -1,9 +1,16 @@
 class Vertex:
     """A class that represents a vertex in Blender"""
 
+    # position coordinates
     x = 0.0
     y = 0.0
     z = 0.0
+
+    # todo: codify the below member variables
+    # uv_data
+    # lightmap_uv_data
+    # normal
+    # bone_weight
 
     def __init__(self, x: float = None, y: float = None, z: float = None):
         """
