@@ -117,9 +117,3 @@ class BinaryReader:
     def seek(self, seek_location):
         self.reader_file.seek(seek_location)
         return
-
-
-# ================= TESTING ==========================
-
-with BinaryReader("D:\\DATA\\map\\m10_01_00_00\\m3190B1A10.flver") as br:
-    print(br.get_struct("?4sIif"))
