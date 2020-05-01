@@ -6,33 +6,39 @@ class BinaryReader:
 
     loaded_file_path = ""
     reader_file = None
-    # TODO: allow for little-endian byte order?
+    endianness = ""
+    # TODO: allow for big-endian byte order?
 
     def __init__(self, file_path):
         self.loaded_file_path = file_path
 
-
-    def __enter__(self):
+    # byte order defaults to "little", which is the only supported order for now
+    def __enter__(self, endianness="little"):
         self.reader_file = open(self.loaded_file_path, 'rb')
+        self.endianness = endianness
         return self
 
 
     def __exit__(self, type, val, tb):
         self.reader_file.close()
 
-
     # returns a tuple of values from data starting at the current file position,
     # and  interpreted based on the given struct_fmt argument.
     # The file-read position will be moved forward a to the point directly after the obtained data
     #   (check the struct module from the python standard library for help defining struct_fmt)
     def get_struct(self, struct_fmt):
+        if self.endianness == "big":
+            struct_fmt = ">" + struct_fmt
+        else:
+            struct_fmt = "<" + struct_fmt
+
         try:
             fmt_size = struct.calcsize(struct_fmt)
             return_struct = struct.unpack(struct_fmt, self.reader_file.read(fmt_size))
         except struct.error as error:
             # TODO: handle exception
             pass
-        if len(struct_fmt) == 1:
+        if len(return_struct) == 1:
             return return_struct[0]
         return return_struct
         # TODO: return in a format besides tuple?
@@ -61,7 +67,8 @@ class BinaryReader:
 
     # returns a 32-bit signed integer from the current file position, and moves the position 32-bits forward
     def get_int32(self):
-        return int.from_bytes(self.reader_file.read(4), byteorder = "big")
+        return self.get_struct("i")
+        # return int.from_bytes(self.reader_file.read(4), byteorder=self.endianness)
 
 
     # returns a 32-bit signed integer from the current file position, and moves the position 32-bits forward
@@ -99,19 +106,8 @@ class BinaryReader:
     # returns a string of length = string_length as read from the current position
     # encoding defaults to utf-8, but may be specified
     def get_string(self, string_length, decode_as = "utf-8"):
-        char_list = []
-        for count in range(0, string_length):
-            char = self.reader_file.read(1)
-
-            try:
-                char_list.append(char.decode(decode_as))
-            except:
-                # TODO: throw exception
-                print("Error: a character was reached that could not be decoded as " + decode_as + ".")
-                return
-
-        final_string = ""
-        return final_string.join(char_list)
+        fmt = str(string_length) + "s"
+        return self.get_struct(fmt).decode(decode_as)
 
     # seek to the given offset in the file (relative to start of file, not current position)
     def seek(self, seek_location):

@@ -1,6 +1,6 @@
-from blender_darksouls_import import mesh
-from blender_darksouls_import import vertex
-from blender_darksouls_import import face
+from ds_import import mesh
+from ds_import import vertex
+from ds_import import face
 
 
 class Model:
@@ -16,5 +16,5 @@ class Model:
 
         # validate meshes
         for m in meshes:
-            if not isinstance(m, Mesh):
+            if not isinstance(m, mesh.Mesh):
                 raise TypeError("Objects of type Mesh expected, however type {} was passed".format(type(m)))

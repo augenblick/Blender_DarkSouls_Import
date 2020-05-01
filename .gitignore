@@ -141,3 +141,8 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Other
+.jpg
+README.MD
+flver_runner.py

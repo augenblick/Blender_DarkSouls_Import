@@ -1,4 +1,4 @@
-from blender_darksouls_import import vertex
+from ds_import import vertex
 
 
 class Face:
@@ -16,7 +16,7 @@ class Face:
             if len(vertices) < 3:
                 raise ValueError("At least three vertices expected")
             for v in vertices:
-                if not isinstance(v, Vertex):
+                if not isinstance(v, vertex.Vertex):
                     raise TypeError("Objects of type Vertex expected, however type {} was passed".format(type(m)))
 
             self.vertices = vertices
