@@ -1,7 +1,4 @@
-from blender_darksouls_import import mesh
-from blender_darksouls_import import vertex
-from blender_darksouls_import import face
-
+from mesh import Mesh
 
 class Model:
     """A class that represents a Model in Blender."""

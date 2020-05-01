@@ -1,5 +1,5 @@
-from blender_darksouls_import import  face
-from blender_darksouls_import import  vertex
+from face import Face
+from vertex import Vertex
 
 
 class Mesh:
