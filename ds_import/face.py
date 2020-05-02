@@ -13,11 +13,11 @@ class Face:
         """
         if vertices is not None:
             # validate vertices
-            if len(vertices) == 3:
+            if len(vertices) != 3:
                 raise ValueError('Three vertices expected.')
-            for v in vertices:
-                if not isinstance(v, Vertex):
-                    raise TypeError('Objects of type Vertex expected, however type {} was passed'.format(type(m)))
+            for vertex in vertices:
+                if not isinstance(vertex, Vertex):
+                    raise TypeError('Objects of type Vertex expected, however type {} was passed'.format(type(vertex)))
 
             self.vertices = vertices
 
