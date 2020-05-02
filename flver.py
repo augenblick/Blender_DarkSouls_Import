@@ -247,6 +247,7 @@ class flv_file:
             for info in range(self.mesh_count):
                 thisMeshInfo = struct.unpack(fmt, flver_file.read(fmt_length))
                 self.meshInfo.append(thisMeshInfo)
+
         return self.meshInfo
 
     # returns info on the vertex structs in this file
@@ -344,7 +345,7 @@ class flv_file:
                     # thisVertInfo = five values as follows:
                     # 1 - unknown
                     # 2 - offset to this data within the data for a given vertex
-                    # 3 - primary type  (sufficient to identify type in all but two cases)
+                    # 3 - primary type  (sufficient to identify type in all but four cases)
                     # 4 - secondary type    (only checked if primary type = '19')
                     # 5 - unknown
                     if thisVertInfo[2] == 2:  # position
