@@ -1,4 +1,4 @@
-from blender_darksouls_import import vertex
+from vertex import Vertex
 
 
 class Face:
@@ -13,18 +13,20 @@ class Face:
         """
         if vertices is not None:
             # validate vertices
-            if len(vertices) < 3:
-                raise ValueError("At least three vertices expected")
-            for v in vertices:
-                if not isinstance(v, Vertex):
-                    raise TypeError("Objects of type Vertex expected, however type {} was passed".format(type(m)))
+            if len(vertices) != 3:
+                raise ValueError('Three vertices expected.')
+            for vertex in vertices:
+                if not isinstance(vertex, Vertex):
+                    raise TypeError('Objects of type Vertex expected, however type {} was passed'.format(type(vertex)))
 
             self.vertices = vertices
 
     def blender_ordered_vertices(self):
         """Returns the vertices in an order that Blender expects."""
+        # TODO
         pass
 
     def darksouls_ordered_vertices(self):
         """Returns the vertices in an order that Dark Souls expects."""
+        # TODO
         pass
