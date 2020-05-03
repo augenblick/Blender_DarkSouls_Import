@@ -1,5 +1,7 @@
 import os
 from collections import namedtuple
+from face import Face
+from face_set import FaceSet
 from model import Model
 from vertex import Vertex
 from mesh import Mesh
@@ -7,6 +9,7 @@ from vector2 import Vector2
 from vector3 import Vector3
 from binary_reader import BinaryReader
 from errors import UnreadableFormatError
+
 
 
 # TODO: add docstring comments throughout
@@ -62,6 +65,10 @@ class FlverExtractor:
                 for vertex in range(0,vi.vertex_count):
                     vert_data = reader.get_struct(current_vertex_format)
                     new_vert = Vertex()
+                    new_vert.uv = None
+                    new_vert.normal = None
+                    new_vert.lightmap_uv = None
+                    new_vert.bone_weight = None
 
                     data_index = 0
 
@@ -118,22 +125,30 @@ class FlverExtractor:
                 new_mesh = Mesh(vert_list)
                 mesh_list.append(new_mesh)
 
-            # add face sets to model
-            face_sets = []
-            face_set_count = 0
+            # create facesets
+            temp_face_sets = []
             for face_data in self.__faceset_info:
                 reader.seek(self.__metadata.data_offset + face_data.buffer_offset)
-                faces = []
+                face_set = []
                 for face_index in range(0, face_data.index_count):
-                    value = reader.get_struct("H")
-                    faces.append(value)
+                    face_set.append(reader.get_u_int16())
 
-                faces = self.sort_faces(faces)
-                current_mesh = mesh_list[face_set_count]
-                current_mesh.faces = faces
-                face_set_count += 1
+                temp_face_sets.append(self.sort_faces(face_set))    # re-order faceset
 
-        model = Model(mesh_list)
+            # break facesets into faces
+            face_sets = []
+            for f_set in temp_face_sets:
+                curr_set = []
+                for i in range(0, len(f_set), 3):
+                     curr_set.append(Face(f_set[i:i + 3]))      # create Face objects
+                face_sets.append(curr_set)
+
+            start_set = 0
+            for mesh_counter, mesh in enumerate(mesh_list):
+                mesh.face_sets = face_sets[start_set:self.__mesh_info[mesh_counter].faceset_count + start_set]
+                start_set += self.__mesh_info[mesh_counter].faceset_count
+
+
         return Model(mesh_list)
 
 
@@ -257,6 +272,10 @@ class FlverExtractor:
 
         vertcount_this_set = 1
         vertcount_prev_set = 1
+        normcount_this_set = 1
+        normcount_prev_set = 1
+        uvcount_this_set = 1
+        uvcount_prev_set = 1
         if filepath[-4:] != ".obj":
             filepath += ".obj"
         with open(filepath, "w") as writer:
@@ -271,24 +290,39 @@ class FlverExtractor:
                     vertcount_this_set += 1
                     writer.write("v {} {} {}\n".format(str(vertex.position.x), str(vertex.position.y), str(vertex.position.z)))
                 if vertex.uv is not None:
+                    uvcount_this_set += 1
                     normals_exist = True
                     writer.write("\n")
                     for vertex in mesh.vertices:
-                        writer.write("vt {} {}\n".format(str(vertex.uv.x), str(vertex.uv.y)))
+                        pass
+                        # writer.write("vt {} {}\n".format(str(vertex.uv.x), str(vertex.uv.y)))
                 if vertex.normal is not None:
+                    normcount_this_set += 1
                     uvs_exist = True
                     writer.write("\n")
                     for vertex in mesh.vertices:
-                        writer.write("vn {} {} {}\n".format(str(vertex.normal.x), str(vertex.normal.y), str(vertex.normal.z)))
+                        pass
+                        # writer.write("vn {} {} {}\n".format(str(vertex.normal.x), str(vertex.normal.y), str(vertex.normal.z)))
                 writer.write("\n")
-                for face in range(0, int(len(mesh.faces) / 3)):
-                    val1 = mesh.faces[3 * face] + vertcount_prev_set
-                    val2 = mesh.faces[3 * face + 1] + vertcount_prev_set
-                    val3 = mesh.faces[3 * face + 2] + vertcount_prev_set
-                    writer.write("f {}/{}/{} {}/{}/{} {}/{}/{}\n".format(val1,val1 if uvs_exist else "",val1 if normals_exist else "",
-                                                                         val2,val2 if uvs_exist else "",val2 if normals_exist else "",
-                                                                         val3,val3 if uvs_exist else "",val3 if normals_exist else ""))
+                for faceset in mesh.face_sets:
+                    for face in faceset:
+                        pos1 = face.vertices[0] + vertcount_prev_set
+                        pos2 = face.vertices[1] + vertcount_prev_set
+                        pos3 = face.vertices[2] + vertcount_prev_set
+                        uv1 = face.vertices[0] + uvcount_prev_set
+                        uv2 = face.vertices[1] + uvcount_prev_set
+                        uv3 = face.vertices[2] + uvcount_prev_set
+                        norm1 = face.vertices[0] + normcount_prev_set
+                        norm2 = face.vertices[1] + normcount_prev_set
+                        norm3 = face.vertices[2] + normcount_prev_set
+
+                        writer.write("f {} {} {}\n".format(pos1, pos2, pos3))
+                        # writer.write("f {}/{}/{} {}/{}/{} {}/{}/{}\n".format(pos1,uv1 if uvs_exist else "",norm1 if normals_exist else "",
+                        #                                                      pos2,uv2 if uvs_exist else "",norm2 if normals_exist else "",
+                        #                                                      pos3,uv3 if uvs_exist else "",norm3 if normals_exist else ""))
                 vertcount_prev_set = vertcount_this_set
+                uvcount_prev_set = uvcount_this_set
+                normcount_prev_set = normcount_this_set
 
 
     # sorts a given faceset into an order that Blender can use
