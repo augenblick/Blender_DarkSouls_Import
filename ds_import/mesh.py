@@ -47,7 +47,7 @@ class Mesh:
     def face_sets(self):
         """List of FaceSet objects."""
         return self._face_sets
-    
+
     @face_sets.setter
     def face_sets(self, face_sets):
         self._face_sets = face_sets

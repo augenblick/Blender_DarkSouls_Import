@@ -4,13 +4,15 @@ from face import Face
 class FaceSet:
     """A class that represents a set of Faces."""
 
-    def __init__(self, vertices=None):
+    def __init__(self, faces=None):
         """
 
-        :param vertices: List of three Vertex objects.
+        :param faces: List of Face objects.
         """
-
-        self._faces = []
+        if faces is not None:
+            self._faces = faces
+        else:
+            self._faces = []
 
     @property
     def faces(self):
