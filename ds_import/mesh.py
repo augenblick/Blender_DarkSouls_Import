@@ -1,19 +1,19 @@
-from face import Face
+from face_set import FaceSet
 from vertex import Vertex
 
 
 class Mesh:
     """A class that represents a mesh in Blender."""
 
-    vertices = []
-    faces = []
-
-    def __init__(self, vertices=None, faces=None):
+    def __init__(self, vertices=None, face_sets=None):
         """
 
         :param vertices: List of Vertex objects
-        :param faces: List of Face objects
+        :param face_sets: List of FaceSet objects
         """
+
+        self._vertices = []
+        self._face_sets = []
 
         if vertices is not None:
 
@@ -22,15 +22,32 @@ class Mesh:
                 raise ValueError("At least three vertices expected")
             for v in vertices:
                 if not isinstance(v, Vertex):
-                    raise TypeError("Object of type Vertex expected, however type {} was passed".format(type(m)))
+                    raise TypeError("Object of type Vertex expected, however type {} was passed".format(type(v)))
 
-            self.vertices = vertices
+            self._vertices = vertices
 
-        if faces is not None:
+        if face_sets is not None:
             # validate faces
-            for f in faces:
-                if not isinstance(f, Face):
-                    raise TypeError("Object of type Face expected, however type {} was passed".format(type(m)))
+            for fs in face_sets:
+                if not isinstance(fs, FaceSet):
+                    raise TypeError("Object of type FaceSet expected, however type {} was passed".format(type(fs)))
 
-            self.faces = faces
+            self._face_sets = face_sets
 
+    @property
+    def vertices(self):
+        """List of Vertex objects."""
+        return self._vertices
+
+    @vertices.setter
+    def vertices(self, vertices):
+        self._vertices = vertices
+
+    @property
+    def face_sets(self):
+        """List of FaceSet objects."""
+        return self._face_sets
+    
+    @face_sets.setter
+    def face_sets(self, face_sets):
+        self._face_sets = face_sets
