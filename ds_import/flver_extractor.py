@@ -1,4 +1,5 @@
 import os
+import typing
 from collections import namedtuple
 from face import Face
 from face_set import FaceSet
@@ -39,6 +40,16 @@ class FlverExtractor:
     __vertex_struct_formats = None      # list of ordered dictionaries describing the vertex data layouts
 
     def extract_model(self):
+        """
+        Extracts the loaded Dark Souls flver file and returns as a Model
+
+        :return: A Dark Souls Model
+        """
+
+        if self.__flver_file_path == "":
+            raise Exception("A file must be loaded before extraction.  Use FlverExtractor.load_file(flver_filepath)")
+
+
         # TODO: fix bug occurring when there is more than one faceset per mesh.  There is a "faceset_count" parameter stored in self.__mesh_info that probably should be referenced
         vert_data_dict = dict({"position":"fff",
                               "bone index":"I",
@@ -105,7 +116,7 @@ class FlverExtractor:
                                 v = v - 65536
                             v = v / 1024
                             v = ((v - 0.5) * -1) + 0.5
-                            new_vert.uv = Vector2(u,v)
+                            new_vert.lightmap_uv = Vector2(u,v)
                             data_index += 2
 
                         elif data_type == "bone weight":
@@ -113,7 +124,16 @@ class FlverExtractor:
                             data_index += 2
 
                         elif data_type == "diffuse UV":
-                            # TODO: handle "diffuse UV" case
+                            [u, v] = vert_data[data_index], vert_data[data_index + 1]
+                            if u > 32767:
+                                u = u - 65536
+                            u = u / 1024
+
+                            if v > 32767:
+                                v = v - 65536
+                            v = v / 1024
+                            v = ((v - 0.5) * -1) + 0.5
+                            new_vert.uv = Vector2(u, v)
                             data_index += 2
 
                         elif data_type == "unknown":
@@ -133,7 +153,7 @@ class FlverExtractor:
                 for face_index in range(0, face_data.index_count):
                     face_set.append(reader.get_u_int16())
 
-                temp_face_sets.append(self.sort_faces(face_set))    # re-order faceset
+                temp_face_sets.append(self.__sort_faces(face_set))    # re-order faceset
 
             # break facesets into faces
             face_sets = []
@@ -266,9 +286,15 @@ class FlverExtractor:
         return vertset_formats
 
 
-    def output_obj(self, filepath):
+    def output_obj(self, model: Model, filepath: str):
+        """
+        Outputs an obj model given a dark souls model and destination path.
 
-        model = self.extract_model()
+        :param model: a dark souls model
+        :param filepath: the path/filename for the resulting obj file
+        """
+
+        # model = self.extract_model()
 
         vertcount_this_set = 1
         vertcount_prev_set = 1
@@ -281,28 +307,32 @@ class FlverExtractor:
         with open(filepath, "w") as writer:
             for mesh in model.meshes:
 
-                vertex_data = namedtuple("vertex_data", ["vertex_normal", "UV"])
-                vertex_datalist = []
-                normals_exist = False
-                uvs_exist = False
+                normals_exist = mesh.vertices[0].normal is not None
+                uvs_exist = mesh.vertices[0].uv is not None
+                lm_uvs_exist = mesh.vertices[0].lightmap_uv is not None
                 writer.write("\no {}\n".format(mesh) )
                 for vertex in mesh.vertices:
                     vertcount_this_set += 1
                     writer.write("v {} {} {}\n".format(str(vertex.position.x), str(vertex.position.y), str(vertex.position.z)))
-                if vertex.uv is not None:
-                    uvcount_this_set += 1
-                    normals_exist = True
+
+                if lm_uvs_exist:
                     writer.write("\n")
                     for vertex in mesh.vertices:
-                        pass
-                        # writer.write("vt {} {}\n".format(str(vertex.uv.x), str(vertex.uv.y)))
-                if vertex.normal is not None:
-                    normcount_this_set += 1
-                    uvs_exist = True
+                        uvcount_this_set += 1
+                        writer.write("vt {} {}\n".format(str(vertex.lightmap_uv.x), str(vertex.lightmap_uv.y)))
+
+                elif uvs_exist:
                     writer.write("\n")
                     for vertex in mesh.vertices:
-                        pass
-                        # writer.write("vn {} {} {}\n".format(str(vertex.normal.x), str(vertex.normal.y), str(vertex.normal.z)))
+                        uvcount_this_set += 1
+                        writer.write("vt {} {}\n".format(str(vertex.uv.x), str(vertex.uv.y)))
+
+                # if normals_exist:
+                #     writer.write("\n")
+                #     for vertex in mesh.vertices:
+                #         normcount_this_set += 1
+                #         writer.write("vn {} {} {}\n".format(str(vertex.normal.x), str(vertex.normal.y), str(vertex.normal.z)))
+
                 writer.write("\n")
                 for faceset in mesh.face_sets:
                     for face in faceset:
@@ -316,17 +346,20 @@ class FlverExtractor:
                         norm2 = face.vertices[1] + normcount_prev_set
                         norm3 = face.vertices[2] + normcount_prev_set
 
-                        writer.write("f {} {} {}\n".format(pos1, pos2, pos3))
-                        # writer.write("f {}/{}/{} {}/{}/{} {}/{}/{}\n".format(pos1,uv1 if uvs_exist else "",norm1 if normals_exist else "",
-                        #                                                      pos2,uv2 if uvs_exist else "",norm2 if normals_exist else "",
-                        #                                                      pos3,uv3 if uvs_exist else "",norm3 if normals_exist else ""))
+                        if lm_uvs_exist:
+                            uvs_exist = True
+                        # writer.write("f {} {} {}\n".format(pos1, pos2, pos3))
+                        normals_exist = False
+                        writer.write("f {}/{}/{} {}/{}/{} {}/{}/{}\n".format(pos1,uv1 if uvs_exist else "", norm1 if normals_exist else "",
+                                                                    pos2,uv2 if uvs_exist else "", norm2 if normals_exist else "",
+                                                                    pos3,uv3 if uvs_exist else "", norm3 if normals_exist else ""))
                 vertcount_prev_set = vertcount_this_set
                 uvcount_prev_set = uvcount_this_set
                 normcount_prev_set = normcount_this_set
 
 
     # sorts a given faceset into an order that Blender can use
-    def sort_faces(self, faces):
+    def __sort_faces(self, faces):
         # TODO: figure out why this works
         faceslist = []
         StartDirection = -1
