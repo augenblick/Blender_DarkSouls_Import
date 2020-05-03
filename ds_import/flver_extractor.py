@@ -36,6 +36,7 @@ class FlverExtractor:
     __vertex_struct_formats = None      # list of ordered dictionaries describing the vertex data layouts
 
     def extract_model(self):
+        # TODO: fix bug occurring when there is more than one faceset per mesh.  There is a "faceset_count" parameter stored in self.__mesh_info that probably should be referenced
         vert_data_dict = dict({"position":"fff",
                               "bone index":"I",
                               "normal":"BBBx",
@@ -63,12 +64,13 @@ class FlverExtractor:
                     new_vert = Vertex()
 
                     data_index = 0
+
                     for data_type in self.__vertex_struct_formats[vi.vertex_struct_formats_index]:
                         if data_type == "position":
                             new_vert.position = Vector3(vert_data[data_index], vert_data[data_index + 1], vert_data[data_index + 2])
                             data_index += 3
 
-                        elif data_type == "bone_index":
+                        elif data_type == "bone index":
                             # TODO: handle "bone_index" case
                             data_index += 1
 
@@ -77,7 +79,7 @@ class FlverExtractor:
                             new_vert.normal = Vector3((vert_data[data_index] - 127) / 127, (vert_data[data_index + 1] - 127) / 127, (vert_data[data_index + 2] - 127) / 127)
                             data_index += 3
 
-                        elif data_type == "vert_color":
+                        elif data_type == "vertex color":
                             # TODO: handle "vert_color" case
                             data_index += 4
 
@@ -85,7 +87,8 @@ class FlverExtractor:
                             # TODO: handle "bitangent" case
                             data_index += 4
 
-                        elif data_type == "diffuse/LM UV":
+                        elif data_type == "diffuse/lightmap UV":
+
                             [u,v] = vert_data[data_index], vert_data[data_index + 1]
                             if u > 32767:
                                 u = u - 65536
@@ -98,7 +101,7 @@ class FlverExtractor:
                             new_vert.uv = Vector2(u,v)
                             data_index += 2
 
-                        elif data_type == "bone_weights":
+                        elif data_type == "bone weight":
                             # TODO: handle "bone_weights" case
                             data_index += 2
 
@@ -251,22 +254,41 @@ class FlverExtractor:
     def output_obj(self, filepath):
 
         model = self.extract_model()
-        file_number = 1
+
         vertcount_this_set = 1
         vertcount_prev_set = 1
-        output_filepath = "{}.obj".format(filepath)
-        with open(output_filepath, "w") as writer:
+        if filepath[-4:] != ".obj":
+            filepath += ".obj"
+        with open(filepath, "w") as writer:
             for mesh in model.meshes:
 
+                vertex_data = namedtuple("vertex_data", ["vertex_normal", "UV"])
+                vertex_datalist = []
+                normals_exist = False
+                uvs_exist = False
                 writer.write("\no {}\n".format(mesh) )
                 for vertex in mesh.vertices:
                     vertcount_this_set += 1
                     writer.write("v {} {} {}\n".format(str(vertex.position.x), str(vertex.position.y), str(vertex.position.z)))
+                if vertex.uv is not None:
+                    normals_exist = True
+                    writer.write("\n")
+                    for vertex in mesh.vertices:
+                        writer.write("vt {} {}\n".format(str(vertex.uv.x), str(vertex.uv.y)))
+                if vertex.normal is not None:
+                    uvs_exist = True
+                    writer.write("\n")
+                    for vertex in mesh.vertices:
+                        writer.write("vn {} {} {}\n".format(str(vertex.normal.x), str(vertex.normal.y), str(vertex.normal.z)))
                 writer.write("\n")
                 for face in range(0, int(len(mesh.faces) / 3)):
-                    writer.write("f {} {} {}\n".format(mesh.faces[3 * face] + vertcount_prev_set, mesh.faces[3 * face + 1] + vertcount_prev_set, mesh.faces[3 * face + 2] + vertcount_prev_set))
+                    val1 = mesh.faces[3 * face] + vertcount_prev_set
+                    val2 = mesh.faces[3 * face + 1] + vertcount_prev_set
+                    val3 = mesh.faces[3 * face + 2] + vertcount_prev_set
+                    writer.write("f {}/{}/{} {}/{}/{} {}/{}/{}\n".format(val1,val1 if uvs_exist else "",val1 if normals_exist else "",
+                                                                         val2,val2 if uvs_exist else "",val2 if normals_exist else "",
+                                                                         val3,val3 if uvs_exist else "",val3 if normals_exist else ""))
                 vertcount_prev_set = vertcount_this_set
-                # file_number += 1
 
 
     # sorts a given faceset into an order that Blender can use
