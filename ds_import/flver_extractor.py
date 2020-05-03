@@ -1,13 +1,15 @@
-from typing import Type
-import model
-from binary_reader import BinaryReader
-from errors import UnreadableFormatError
 import os
 from collections import namedtuple
-import struct
+from model import Model
+from vertex import Vertex
+from mesh import Mesh
+from vector2 import Vector2
+from vector3 import Vector3
+from binary_reader import BinaryReader
+from errors import UnreadableFormatError
 
-test_file_path = "D:\\DATA\\map\\m10_01_00_00\\m3210B1A10.flver"
 
+# TODO: add docstring comments throughout
 class FlverExtractor:
 
     # define namedtuples
@@ -19,8 +21,8 @@ class FlverExtractor:
     vertex_info = namedtuple("vertex_info", ["unknown1", "vertex_struct_formats_index", "per_vertex_size", "vertex_count",
                                              "unknown2", "unknown3", "buffer_size", "buffer_offset"])
     vertex_description_info = namedtuple("vertex_description_info", ["datatype_count", "unknown1", "unknown2", "description_offset"])
-
     material_parameters = namedtuple("material_parameters", ["name_offset1", "name_offset2", "unknown1", "unknown2", "unknown3", "unknown4", "unknown5", "unknown6"])
+
 
     __flver_file_path = ""
     __metadata = None                   # flver file metadata-- data offset, number of meshes, bones, etc.
@@ -30,7 +32,7 @@ class FlverExtractor:
     __faceset_info = None               # per faceset: information about each faceset buffer (indices count, offset to indices, etc.)
     __vertex_info = None                # per vertex set: vertex_struct_formats_index, data size per vertex, vertices offset, vertex_count, etc.
     __vertex_description_info = None    # per vertex description: count of datapoints in this description, offset to start of description
-    __material_parameters = None        # offsets to material/texture filenames(?)
+    __material_parameters = None        # per material?: offsets to material/texture filenames(?)
     __vertex_struct_formats = None      # list of ordered dictionaries describing the vertex data layouts
 
     def extract_model(self):
@@ -46,17 +48,90 @@ class FlverExtractor:
                               )
 
         with BinaryReader(self.__flver_file_path) as reader:
-            # for vi in self.__vertex_info:
-            vi = self.__vertex_info[3]
-            print(vi.buffer_size)
 
-            current_vertex_format = ""
-            reader.seek(vi.buffer_offset + self.__metadata.data_offset)
-            for datatype in self.__vertex_struct_formats[vi.vertex_struct_formats_index]:
-                current_vertex_format += vert_data_dict.get(datatype)
-            for vertex in range(0,vi.vertex_count):
-                vert_data = reader.get_struct(current_vertex_format)
-                # TODO: create vertices, meshes, model
+            # add vertex sets to model
+            mesh_list = []
+            for vi in self.__vertex_info:
+
+                current_vertex_format = ""
+                reader.seek(vi.buffer_offset + self.__metadata.data_offset)
+                for datatype in self.__vertex_struct_formats[vi.vertex_struct_formats_index]:
+                    current_vertex_format += vert_data_dict.get(datatype)
+                vert_list = []
+                for vertex in range(0,vi.vertex_count):
+                    vert_data = reader.get_struct(current_vertex_format)
+                    new_vert = Vertex()
+
+                    data_index = 0
+                    for data_type in self.__vertex_struct_formats[vi.vertex_struct_formats_index]:
+                        if data_type == "position":
+                            new_vert.position = Vector3(vert_data[data_index], vert_data[data_index + 1], vert_data[data_index + 2])
+                            data_index += 3
+
+                        elif data_type == "bone_index":
+                            # TODO: handle "bone_index" case
+                            data_index += 1
+
+                        elif data_type == "normal":
+                            # TODO: confirm that normals are correct
+                            new_vert.normal = Vector3((vert_data[data_index] - 127) / 127, (vert_data[data_index + 1] - 127) / 127, (vert_data[data_index + 2] - 127) / 127)
+                            data_index += 3
+
+                        elif data_type == "vert_color":
+                            # TODO: handle "vert_color" case
+                            data_index += 4
+
+                        elif data_type == "bitangent":
+                            # TODO: handle "bitangent" case
+                            data_index += 4
+
+                        elif data_type == "diffuse/LM UV":
+                            [u,v] = vert_data[data_index], vert_data[data_index + 1]
+                            if u > 32767:
+                                u = u - 65536
+                            u = u / 1024
+
+                            if v > 32767:
+                                v = v - 65536
+                            v = v / 1024
+                            v = ((v - 0.5) * -1) + 0.5
+                            new_vert.uv = Vector2(u,v)
+                            data_index += 2
+
+                        elif data_type == "bone_weights":
+                            # TODO: handle "bone_weights" case
+                            data_index += 2
+
+                        elif data_type == "diffuse UV":
+                            # TODO: handle "diffuse UV" case
+                            data_index += 2
+
+                        elif data_type == "unknown":
+                            # TODO: handle "unknown" case
+                            data_index += 1
+                            pass
+
+                    vert_list.append(new_vert)
+                new_mesh = Mesh(vert_list)
+                mesh_list.append(new_mesh)
+
+            # add face sets to model
+            face_sets = []
+            face_set_count = 0
+            for face_data in self.__faceset_info:
+                reader.seek(self.__metadata.data_offset + face_data.buffer_offset)
+                faces = []
+                for face_index in range(0, face_data.index_count):
+                    value = reader.get_struct("H")
+                    faces.append(value)
+
+                faces = self.sort_faces(faces)
+                current_mesh = mesh_list[face_set_count]
+                current_mesh.faces = faces
+                face_set_count += 1
+
+        model = Model(mesh_list)
+        return Model(mesh_list)
 
 
     # "loading the file" obtains the information necessary to extract the file's payload (vertices, faces, etc.)
@@ -72,7 +147,7 @@ class FlverExtractor:
 
         with BinaryReader(self.__flver_file_path) as reader:
 
-            # TODO: convert flag values to booleans?
+            # TODO: convert flag values to boolean?
 
             # seek past file metadata
             reader.seek(128)
@@ -109,7 +184,7 @@ class FlverExtractor:
 
             self.__vertex_struct_formats = self.__define_vertset_formats()
 
-
+    # check to see whether the file is a readable format
     def __is_ds1_flver(self):
 
         if not os.path.isfile(self.__flver_file_path):
@@ -151,7 +226,6 @@ class FlverExtractor:
                     tempStruct = reader.get_struct("IIIII")
                     typeConcat = str(tempStruct[2]) + str(tempStruct[3])
 
-
                     if typeConcat == "20":
                         formats.append("position")
                     elif typeConcat == "172":
@@ -174,8 +248,54 @@ class FlverExtractor:
         return vertset_formats
 
 
+    def output_obj(self, filepath):
+
+        model = self.extract_model()
+        file_number = 1
+        vertcount_this_set = 1
+        vertcount_prev_set = 1
+        output_filepath = "{}.obj".format(filepath)
+        with open(output_filepath, "w") as writer:
+            for mesh in model.meshes:
+
+                writer.write("\no {}\n".format(mesh) )
+                for vertex in mesh.vertices:
+                    vertcount_this_set += 1
+                    writer.write("v {} {} {}\n".format(str(vertex.position.x), str(vertex.position.y), str(vertex.position.z)))
+                writer.write("\n")
+                for face in range(0, int(len(mesh.faces) / 3)):
+                    writer.write("f {} {} {}\n".format(mesh.faces[3 * face] + vertcount_prev_set, mesh.faces[3 * face + 1] + vertcount_prev_set, mesh.faces[3 * face + 2] + vertcount_prev_set))
+                vertcount_prev_set = vertcount_this_set
+                # file_number += 1
 
 
+    # sorts a given faceset into an order that Blender can use
+    def sort_faces(self, faces):
+        # TODO: figure out why this works
+        faceslist = []
+        StartDirection = -1
+        f1 = faces[0]
+        f2 = faces[1]
+        FaceDirection = StartDirection
+        counter = 2
+        while counter < len(faces):
+
+            f3 = faces[counter]
+            FaceDirection *= -1
+            if (f1 != f2) and (f2 != f3) and (f3 != f1):
+                if FaceDirection > 0:
+                    faceslist.append(f1)
+                    faceslist.append(f2)
+                    faceslist.append(f3)
+                else:
+                    faceslist.append(f1)
+                    faceslist.append(f3)
+                    faceslist.append(f2)
+            counter = counter + 1
+            f1 = f2
+            f2 = f3
+
+        return faceslist
 
 
     class __FlverMetadata:

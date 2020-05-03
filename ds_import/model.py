@@ -15,3 +15,5 @@ class Model:
         for m in meshes:
             if not isinstance(m, Mesh):
                 raise TypeError("Objects of type Mesh expected, however type {} was passed".format(type(m)))
+
+        self.meshes = meshes

@@ -143,6 +143,6 @@ dmypy.json
 cython_debug/
 
 # Other
-.jpg
+reference images/
+*/flver_runner.py
 README.MD
-flver_runner.py
