@@ -1,4 +1,4 @@
-from face import Face
+from ds_import.face import Face
 
 
 class FaceSet:
@@ -21,4 +21,14 @@ class FaceSet:
 
     @faces.setter
     def faces(self, faces):
+        """
+
+        :type faces: List of Face objects
+        """
+        if not isinstance(faces, list):
+            raise TypeError('Not a list.')
+        for f in faces:
+            if not isinstance(f, Face):
+                raise TypeError("Object of type Face expected, however type {} was passed".format(type(f)))
+
         self._faces = faces
