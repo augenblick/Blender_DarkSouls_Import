@@ -94,7 +94,7 @@ class FlverExtractor:
 
                         elif data_type == "normal":
                             # TODO: confirm that normals are correct
-                            new_vert.normal = Vector3((vert_data[data_index] - 127) / 127, (vert_data[data_index + 1] - 127) / 127, (vert_data[data_index + 2] - 127) / 127)
+                            new_vert.normal = Vector3(((vert_data[data_index] - 127) / 127) * 1, ((vert_data[data_index + 1] - 127) / 127) * 1, ((vert_data[data_index + 2] - 127) / 127) * 1)
                             data_index += 3
 
                         elif data_type == "vertex color":
@@ -327,11 +327,11 @@ class FlverExtractor:
                         uvcount_this_set += 1
                         writer.write("vt {} {}\n".format(str(vertex.uv.x), str(vertex.uv.y)))
 
-                # if normals_exist:
-                #     writer.write("\n")
-                #     for vertex in mesh.vertices:
-                #         normcount_this_set += 1
-                #         writer.write("vn {} {} {}\n".format(str(vertex.normal.x), str(vertex.normal.y), str(vertex.normal.z)))
+                if normals_exist:
+                    writer.write("\n")
+                    for vertex in mesh.vertices:
+                        normcount_this_set += 1
+                        writer.write("vn {} {} {}\n".format(str(vertex.normal.x), str(vertex.normal.y), str(vertex.normal.z)))
 
                 writer.write("\n")
                 for faceset in mesh.face_sets:
@@ -349,7 +349,7 @@ class FlverExtractor:
                         if lm_uvs_exist:
                             uvs_exist = True
                         # writer.write("f {} {} {}\n".format(pos1, pos2, pos3))
-                        normals_exist = False
+                        # normals_exist = False
                         writer.write("f {}/{}/{} {}/{}/{} {}/{}/{}\n".format(pos1,uv1 if uvs_exist else "", norm1 if normals_exist else "",
                                                                     pos2,uv2 if uvs_exist else "", norm2 if normals_exist else "",
                                                                     pos3,uv3 if uvs_exist else "", norm3 if normals_exist else ""))
@@ -386,6 +386,21 @@ class FlverExtractor:
 
         return faceslist
 
+
+    def get_materials(self):
+
+        with BinaryReader(self.__flver_file_path) as reader:
+            mat_info = self.__material_parameters
+            for counter in range (0, len(mat_info)):
+                reader.seek(mat_info[counter].name_offset1)
+                print(reader.get_string(mat_info[counter].name_offset2 - mat_info[counter].name_offset1))
+                if counter < len(mat_info) - 1:
+                    print(reader.get_string(mat_info[counter + 1].name_offset1 - mat_info[counter].name_offset2))
+
+                # print("-----------------")
+                # reader.seek(material.name_offset1)
+                # print(reader.get_string((material.name_offset2 - material.name_offset1)))
+                # print(reader.get_string((material.path_offset - material.name_offset)))
 
     class __FlverMetadata:
 
