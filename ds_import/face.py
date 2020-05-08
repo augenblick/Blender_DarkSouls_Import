@@ -26,19 +26,13 @@ class Face:
             # Verify each element in the list is an unsigned int
             for vertex_index in vertices:
                 if not isinstance(vertex_index, int):
-                    raise TypeError('Objects of type int expected, however type {} was passed'.format(type(vertex_index)))
+                    raise TypeError(
+                        'Objects of type int expected, however type {} was passed'.format(type(vertex_index)))
                 else:
                     if vertex_index < 0:
                         raise ValueError('Expecting unsigned ints')
                     else:
                         self._vertices = vertices
 
-    # TODO: Implement vertex order methods below.
-
-    def blender_ordered_vertices(self):
-        """Returns the vertices in an order that Blender expects."""
-        pass
-
-    def darksouls_ordered_vertices(self):
-        """Returns the vertices in an order that Dark Souls expects."""
-        pass
+    def __str__(self):
+        return f'vertices={self.vertices}'

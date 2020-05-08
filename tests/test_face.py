@@ -31,3 +31,21 @@ def test_face():
 
     with pytest.raises(IndexError):
         assert f.vertices[3] == 0
+
+
+# test the __str__() method
+@pytest.mark.parametrize('vertices', [
+    [0, 0, 0],
+    [1, 2, 3],
+    pytest.param([1], marks=pytest.mark.xfail(raises=ValueError)),
+    pytest.param([-1, 2, 3], marks=pytest.mark.xfail(raises=ValueError)),
+    pytest.param([1.0, 1.0, 1.0], marks=pytest.mark.xfail(raises=TypeError)),
+])
+def test_str(vertices):
+    face = Face()
+    expected_string = f'vertices={vertices}'
+
+    face.vertices = vertices
+
+    print(face)
+    assert str(face) == expected_string

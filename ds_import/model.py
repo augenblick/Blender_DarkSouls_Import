@@ -29,3 +29,11 @@ class Model:
                 raise TypeError("Object of type Mesh expected, however type {} was passed".format(type(mesh)))
 
         self._meshes = meshes
+
+    def __str__(self):
+        return_string = ''
+
+        for i in range(0, len(self.meshes)):
+            return_string += f'mesh[{i}]={self.meshes[i]}\n'
+
+        return return_string

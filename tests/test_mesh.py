@@ -6,7 +6,6 @@ from ds_import.face import Face
 
 
 def test_mesh():
-
     m = Mesh()
     assert len(m.vertices) == 0
     assert len(m.face_sets) == 0
@@ -25,3 +24,24 @@ def test_mesh():
 
     with pytest.raises(TypeError):
         m.face_sets = [Face(), Face()]
+
+
+# test the __str__() method
+def test_str():
+    mesh = Mesh()
+    expected_string = ''
+    mesh.vertices = [Vertex(), Vertex(), Vertex()]
+
+    face_set = FaceSet()
+    face_set.faces = [Face(), Face()]
+
+    mesh.face_sets = [face_set, face_set]
+
+    for i in range(0, len(mesh.vertices)):
+        expected_string += f'vertex[{i}]={mesh.vertices[i]}\n'
+
+    for i in range(0, len(mesh.face_sets)):
+        expected_string += f'face_set[{i}]={mesh.face_sets[i]}\n'
+
+    print(mesh)
+    assert str(mesh) == expected_string

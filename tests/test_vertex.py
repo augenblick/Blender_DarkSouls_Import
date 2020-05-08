@@ -42,3 +42,24 @@ def test_vertex():
     with pytest.raises(TypeError):
         v.normal = (0.0, 0.0, 0.0)
 
+
+# test the __str__() method
+@pytest.mark.parametrize('position, uv, lightmap_uv, normal, bone_weight', [
+    (Vector3(), Vector2(), Vector2(), Vector3(), None),
+    (Vector3(0.0, 1.0, -25.2), Vector2(1.0, 0.0), Vector2(1.0, 0.0), Vector3(1.0, 1.0, 1.0), None),
+])
+def test_str(position, uv, lightmap_uv, normal, bone_weight):
+    vertex = Vertex()
+    vertex.position = position
+    vertex.uv = uv
+    vertex.lightmap_uv = lightmap_uv
+    vertex.normal = normal
+    vertex.bone_weight = bone_weight
+
+    expected_string = f'position=({position}) ' \
+               f'uv=({uv}) ' \
+               f'lightmap_uv=({lightmap_uv}) ' \
+               f'normal=({normal}) ' \
+               f'bone_weight=({bone_weight}) '
+
+    assert str(vertex) == expected_string

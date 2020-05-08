@@ -11,7 +11,7 @@ class Vertex:
         self._lightmap_uv = Vector2()
         self._normal = Vector3()
         # TODO: double check bone_weight data type
-        self._bone_weight = 0.0
+        self._bone_weight = None
 
     # Encapsulation of position
     @property
@@ -65,3 +65,19 @@ class Vertex:
         else:
             raise TypeError('Expecting a Vector3 value.')
 
+    @property
+    def bone_weight(self):
+        # TODO: Do this correctly, this is just a placeholder.
+        return self._bone_weight
+
+    @bone_weight.setter
+    def bone_weight(self, bone_weight):
+        # TODO: data validation when known
+        self._bone_weight = bone_weight
+
+    def __str__(self):
+        return f'position=({self.position}) ' \
+               f'uv=({self.uv}) ' \
+               f'lightmap_uv=({self.lightmap_uv}) ' \
+               f'normal=({self.normal}) ' \
+               f'bone_weight=({self.bone_weight}) '

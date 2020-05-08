@@ -52,3 +52,15 @@ def test_vector2_xy():
 
     assert v.x == 1.0
     assert v.y == 2.0
+
+
+# test the __str__() method
+@pytest.mark.parametrize('x, y, expected_string', [
+    (0.0, 0.0, 'x: 0.0, y: 0.0'),
+    (1.0, 1.0, 'x: 1.0, y: 1.0'),
+    (1.0, -1.0, 'x: 1.0, y: -1.0'),
+    (1.05, 1.005, 'x: 1.05, y: 1.005'),
+    (.1, 0.1, 'x: 0.1, y: 0.1')
+])
+def test_str(x, y, expected_string):
+    assert str(Vector2(x, y)) == expected_string

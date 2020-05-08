@@ -1,6 +1,4 @@
-.idea/
-
-# Added the python gitignore from 
+# Added the python gitignore from
 # https://github.com/github/gitignore/blob/master/Python.gitignore
 
 # Byte-compiled / optimized / DLL files
@@ -141,3 +139,6 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# PyCharm stuff
+.idea/

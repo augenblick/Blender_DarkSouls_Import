@@ -32,3 +32,11 @@ class FaceSet:
                 raise TypeError("Object of type Face expected, however type {} was passed".format(type(f)))
 
         self._faces = faces
+
+    def __str__(self):
+        return_string = ''
+
+        for i in range(0, len(self.faces)):
+            return_string += f'face[{i}]={self.faces[i]}\n'
+
+        return return_string

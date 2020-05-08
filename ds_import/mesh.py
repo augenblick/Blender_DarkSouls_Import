@@ -50,3 +50,14 @@ class Mesh:
                 raise TypeError("Object of type FaceSet expected, however type {} was passed".format(type(fs)))
 
         self._face_sets = face_sets
+
+    def __str__(self):
+        return_string = ''
+
+        for i in range(0, len(self.vertices)):
+            return_string += f'vertex[{i}]={self.vertices[i]}\n'
+
+        for i in range(0, len(self.face_sets)):
+            return_string += f'face_set[{i}]={self.face_sets[i]}\n'
+
+        return return_string
