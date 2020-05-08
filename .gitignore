@@ -140,5 +140,10 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+
 # PyCharm stuff
 .idea/
+
+# Other
+reference images/
+.flver_runner.py
