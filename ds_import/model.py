@@ -10,7 +10,6 @@ class Model:
         :param meshes: List of Mesh objects.
         """
 
-
         self._meshes = []
 
         if meshes is not None:
@@ -38,11 +37,3 @@ class Model:
             return_string += f'mesh[{i}]={self.meshes[i]}\n'
 
         return return_string
-bcv
-        # validate meshes
-        for m in meshes:
-            if not isinstance(m, Mesh):
-                raise TypeError("Objects of type Mesh expected, however type {} was passed".format(type(m)))
-
-        self.meshes = meshes
-

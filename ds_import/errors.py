@@ -1,3 +1,0 @@
-
-class UnreadableFormatError(Exception):
-    pass
