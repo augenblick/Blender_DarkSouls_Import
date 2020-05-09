@@ -144,4 +144,5 @@ cython_debug/
 
 # Other
 reference images/
-.flver_runner.py
+flver_runner.py
+flver.py
