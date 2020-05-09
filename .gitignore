@@ -142,3 +142,6 @@ cython_debug/
 
 # PyCharm stuff
 .idea/
+
+# Temporary local files for dev/testing never meant to be committed
+temp_ignored/
