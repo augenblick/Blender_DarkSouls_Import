@@ -1,5 +1,5 @@
-from face_set import FaceSet
-from vertex import Vertex
+from ds_import.face_set import FaceSet
+from ds_import.vertex import Vertex
 
 
 class Mesh:
@@ -16,23 +16,10 @@ class Mesh:
         self._face_sets = []
 
         if vertices is not None:
-
-            # validate vertices
-            if len(vertices) < 3:
-                raise ValueError("At least three vertices expected")
-            for v in vertices:
-                if not isinstance(v, Vertex):
-                    raise TypeError("Object of type Vertex expected, however type {} was passed".format(type(v)))
-
-            self._vertices = vertices
+            self.vertices = vertices
 
         if face_sets is not None:
-            # validate faces
-            for fs in face_sets:
-                if not isinstance(fs, FaceSet):
-                    raise TypeError("Object of type FaceSet expected, however type {} was passed".format(type(fs)))
-
-            self._face_sets = face_sets
+            self.face_sets = face_sets
 
     @property
     def vertices(self):
@@ -41,6 +28,13 @@ class Mesh:
 
     @vertices.setter
     def vertices(self, vertices):
+        # validate vertices
+        if len(vertices) < 3:
+            raise ValueError("At least three vertices expected")
+        for v in vertices:
+            if not isinstance(v, Vertex):
+                raise TypeError("Object of type Vertex expected, however type {} was passed".format(type(v)))
+
         self._vertices = vertices
 
     @property
@@ -50,4 +44,20 @@ class Mesh:
 
     @face_sets.setter
     def face_sets(self, face_sets):
+        # validate faces
+        for fs in face_sets:
+            if not isinstance(fs, FaceSet):
+                raise TypeError("Object of type FaceSet expected, however type {} was passed".format(type(fs)))
+
         self._face_sets = face_sets
+
+    def __str__(self):
+        return_string = ''
+
+        for i in range(0, len(self.vertices)):
+            return_string += f'vertex[{i}]={self.vertices[i]}\n'
+
+        for i in range(0, len(self.face_sets)):
+            return_string += f'face_set[{i}]={self.face_sets[i]}\n'
+
+        return return_string

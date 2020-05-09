@@ -38,3 +38,6 @@ class Vector2:
         if not isinstance(y, float):
             raise TypeError('Expects float value.')
         self._y = y
+
+    def __str__(self):
+        return 'x: {}, y: {}'.format(self.x, self.y)
