@@ -39,3 +39,14 @@ def test_str():
 
     print(face_set)
     assert str(face_set) == expected_string
+
+
+def test_reset():
+    face_set = FaceSet()
+    assert len(face_set.faces) == 0
+
+    face_set.faces.append(Face())
+    assert len(face_set.faces) == 1
+
+    face_set.reset()
+    assert len(face_set.faces) == 0

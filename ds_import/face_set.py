@@ -9,10 +9,11 @@ class FaceSet:
 
         :param faces: List of Face objects.
         """
+
+        self.reset()
+
         if faces is not None:
-            self._faces = faces
-        else:
-            self._faces = []
+            self.faces = faces
 
     @property
     def faces(self):
@@ -40,3 +41,7 @@ class FaceSet:
             return_string += f'face[{i}]={self.faces[i]}\n'
 
         return return_string
+
+    def reset(self):
+        """Resets faces=[]."""
+        self._faces = []

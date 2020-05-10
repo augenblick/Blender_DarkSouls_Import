@@ -5,13 +5,28 @@ from ds_import.vector3 import Vector3
 class Vertex:
     """A class that represents a vertex in Blender"""
 
-    def __init__(self):
-        self._position = Vector3()
-        self._uv = Vector2()
-        self._lightmap_uv = Vector2()
-        self._normal = Vector3()
-        # TODO: double check bone_weight data type
-        self._bone_weight = None
+    def __init__(self, position=None, uv=None, lightmap_uv=None, normal=None, bone_weight=None):
+        """
+
+        :param position: Vector3
+        :param uv: Vector2
+        :param lightmap_uv: Vector2
+        :param normal: Vector3
+        :param bone_weight: None (TBD)
+        """
+
+        self.reset()
+
+        if position is not None:
+            self.position = position
+        if uv is not None:
+            self.uv = uv
+        if lightmap_uv is not None:
+            self.lightmap_uv = lightmap_uv
+        if normal is not None:
+            self.normal = normal
+        if bone_weight is not None:
+            self.bone_weight = bone_weight
 
     # Encapsulation of position
     @property
@@ -81,3 +96,11 @@ class Vertex:
                f'lightmap_uv=({self.lightmap_uv}) ' \
                f'normal=({self.normal}) ' \
                f'bone_weight=({self.bone_weight}) '
+
+    def reset(self):
+        """Resets position=None, uv=None, lightmap_uv=None, normal=None, bone_weight=None"""
+        self._position = None
+        self._uv = None
+        self._lightmap_uv = None
+        self._normal = None
+        self._bone_weight = None

@@ -6,10 +6,7 @@ def test_face():
     f = Face()
 
     assert isinstance(f.vertices, list)
-    assert len(f.vertices) == 3
-    for vertex_index in f.vertices:
-        assert isinstance(vertex_index, int)
-        assert vertex_index >= 0
+    assert len(f.vertices) == 0
 
     with pytest.raises(TypeError):
         f.vertices = None
@@ -49,3 +46,11 @@ def test_str(vertices):
 
     print(face)
     assert str(face) == expected_string
+
+
+def test_reset():
+    face = Face([0, 1, 2])
+    assert len(face.vertices) == 3
+
+    face.reset()
+    assert len(face.vertices) == 0
