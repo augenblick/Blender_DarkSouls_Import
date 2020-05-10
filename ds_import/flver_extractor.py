@@ -1,15 +1,13 @@
 import os
 import typing
 from collections import namedtuple
-from face import Face
-from face_set import FaceSet
-from model import Model
-from vertex import Vertex
-from mesh import Mesh
-from vector2 import Vector2
-from vector3 import Vector3
-from binary_reader import BinaryReader
-from errors import UnreadableFormatError
+from ds_import.face import Face
+from ds_import.vertex import Vertex
+from ds_import.mesh import Mesh
+from ds_import.vector2 import Vector2
+from ds_import.vector3 import Vector3
+from ds_import.binary_reader import BinaryReader
+from ds_import.errors import UnreadableFormatError
 
 
 
