@@ -1,5 +1,6 @@
-import struct
 import os
+import struct
+import binascii
 
 class BinaryReader:
 
@@ -49,6 +50,7 @@ class BinaryReader:
         if len(return_struct) == 1:
             return return_struct[0]     # if returning a single value, no need for a tuple
         return return_struct
+        # TODO: return in a format besides tuple?
 
 
     # returns a boolean value, considering one byte at the current file position, and moves the position 8-bits forward
@@ -69,7 +71,7 @@ class BinaryReader:
         return self.get_struct("b")
 
 
-    # returns an 8-bit unsigned integer from the current file position, and moves the position 8-bits forward
+    # returns an 8-bit signed integer from the current file position, and moves the position 8-bits forward
     def get_u_int8(self):
         self._reader_position += 1
         return self.get_struct("B")
@@ -79,9 +81,10 @@ class BinaryReader:
     def get_int32(self):
         self._reader_position += 4
         return self.get_struct("i")
+        # return int.from_bytes(self.reader_file.read(4), byteorder=self.endianness)
 
 
-    # returns a 32-bit unsigned integer from the current file position, and moves the position 32-bits forward
+    # returns a 32-bit signed integer from the current file position, and moves the position 32-bits forward
     def get_u_int32(self):
         self._reader_position += 4
         return self.get_struct("I")
