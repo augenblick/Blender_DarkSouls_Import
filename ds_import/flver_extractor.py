@@ -224,9 +224,11 @@ class FlverExtractor:
 
     # check to see whether the file is a readable format
     def __is_ds1_flver(self):
+        """return true if the given file is of a supported format
 
-        if not os.path.isfile(self.__flver_file_path):
-            raise FileNotFoundError("The file '{filepath}' could not be found".format(filepath=self.__flver_file_path))
+        A supported file will meet three criteria;  It will be an .flver file with little-endian byte order,
+        and will be version 2.12.
+        """
 
         with BinaryReader(self.__flver_file_path) as reader:
 
