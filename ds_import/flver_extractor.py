@@ -316,21 +316,6 @@ class FlverExtractor:
         return faceslist
 
 
-    def get_materials(self):
-
-        with BinaryReader(self.__flver_file_path) as reader:
-            mat_info = self.__material_parameters
-            for counter in range (0, len(mat_info)):
-                reader.seek(mat_info[counter].name_offset1)
-                print(reader.get_string(mat_info[counter].name_offset2 - mat_info[counter].name_offset1))
-                if counter < len(mat_info) - 1:
-                    print(reader.get_string(mat_info[counter + 1].name_offset1 - mat_info[counter].name_offset2))
-
-                # print("-----------------")
-                # reader.seek(material.name_offset1)
-                # print(reader.get_string((material.name_offset2 - material.name_offset1)))
-                # print(reader.get_string((material.path_offset - material.name_offset)))
-
     class __FlverMetadata:
 
         data_offset = 0
