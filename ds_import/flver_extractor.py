@@ -1,15 +1,15 @@
 import os
 import typing
 from collections import namedtuple
-from face import Face
-from face_set import FaceSet
-from model import Model
-from vertex import Vertex
-from mesh import Mesh
-from vector2 import Vector2
-from vector3 import Vector3
-from binary_reader import BinaryReader
-from errors import UnreadableFormatError
+from ds_import.face import Face
+from ds_import.face_set import FaceSet
+from ds_import.model import Model
+from ds_import.vertex import Vertex
+from ds_import.mesh import Mesh
+from ds_import.vector2 import Vector2
+from ds_import.vector3 import Vector3
+from ds_import.binary_reader import BinaryReader
+from ds_import.errors import UnreadableFormatError
 
 
 
@@ -224,12 +224,12 @@ class FlverExtractor:
 
     # check to see whether the file is a readable format
     def __is_ds1_flver(self):
+        """Check that the file being read is of a supported format.
 
-        if not os.path.isfile(self.__flver_file_path):
-            raise FileNotFoundError("The file '{filepath}' could not be found".format(filepath=self.__flver_file_path))
+        Currently supported files meet three criteria;  They are .flver files, byte order is little-endian, and
+        the file version is 2.12"""
 
         with BinaryReader(self.__flver_file_path) as reader:
-
             if reader.get_string(5) == "FLVER":         # is flver file?
                 reader.seek(6)
                 if reader.get_string(1) == "L":         # is little-endian?
