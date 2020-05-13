@@ -280,15 +280,6 @@ class FlverExtractor:
 
             self.__vertset_struct_formats = self.__define_vertset_formats()
 
-            with open(self.__flver_file_path, 'r', encoding='utf-16') as reader:
-                # reader.seek(29584)
-                # print(reader.read(5))
-                for m in self.__vertset_struct_formats:
-                    print(m)
-                    # reader.seek(m.name_offset2)
-                    # print(reader.read(35))
-                    # print(m.param_count)
-
 
 
     # check to see whether the file is a readable format
