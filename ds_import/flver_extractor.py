@@ -1,5 +1,3 @@
-import os
-import typing
 from collections import namedtuple
 from ds_import.face import Face
 from ds_import.vertex import Vertex
@@ -10,32 +8,107 @@ from ds_import.binary_reader import BinaryReader
 from ds_import.errors import UnreadableFormatError
 
 
-
 # TODO: add docstring comments throughout
 class FlverExtractor:
 
-    # define namedtuples
+    # namedtuple definitions ===========================================================================================
+
+    # material_info - information about each material associated with the model in this flver file.
+    #       > name_offset - offset to the material name
+    #       > path_offset - offset to the material's path within the Dark Souls data (external to this .flver file)
+    #       > param_count - number of inputs (textures) for this material
+    #       > param_start_index - index into the list of texture files for the first texture associated with this material
+    #       > flags - single-bit flags (stored currently as a integer).  I haven't deduced their specific purpose yet-- presumably material settings
     material_info = namedtuple("material_data", ["name_offset", "path_offset", "param_count", "param_start_index", "flags", "unknown1", "unknown2", "unknown3"])
-    mesh_info = namedtuple("mesh_info", ["is_dynamic", "material_index", "unknown1", "unknown2", "bone_index", "bone_index_count", "unknown3", "bone_indices_offset",
-                                        "faceset_count", "faceset_index_offset", "vertex_info_count", "vertex_info_offset"])
-    faceset_info = namedtuple("faceset_info", ["flags", "topology", "cull_backfaces", "unknown1", "unknown2",
-                                               "index_count", "buffer_offset", "buffer_size", "unknown3", "unknown4", "unknown5"] )
-    vertex_info = namedtuple("vertex_info", ["unknown1", "vertex_struct_formats_index", "per_vertex_size", "vertex_count",
-                                             "unknown2", "unknown3", "buffer_size", "buffer_offset"])
-    vertex_description_info = namedtuple("vertex_description_info", ["datatype_count", "unknown1", "unknown2", "description_offset"])
+
+    # material_parameters - information about each material parameter (texture)
+    #       > name_offset1 - offset to the path of the parameter within the Dark Souls data (external to this .flver file)
+    #                       These come in groups, with the last member in each group being a name (of some sort) rather than a path.
+    #                                for example:   <Path to first texture>
+    #                                               <Path to second texture>
+    #                                               <Path to third texture>
+    #                                               g_DetailBumpmap
+    #                       The size of each group corresponds with material_info.param_count (see previous namedtuple)
+    #       > name_offset2 - offset to, presumptively, the name of the field the given parameter is assigned to.  e.g. "g_Diffuse", "g_Bumpmap", etc.
     material_parameters = namedtuple("material_parameters", ["name_offset1", "name_offset2", "unknown1", "unknown2", "unknown3", "unknown4", "unknown5", "unknown6"])
 
+    # mesh_info - information related to each mesh in this flver file.  It seems that a mesh will have one vertset, but may have multiple facesets.
+    #       > is_dynamic -
+    #       > material_index -
+    #       > bone_index -
+    #       > bone_index_count -
+    #       > bone_indices_offset -
+    #       > faceset_count -
+    #       > faceset_index_offset -
+    #       > vertset_info_count -
+    #       > vertset_info_offset - 
+    mesh_info = namedtuple("mesh_info", ["is_dynamic", "material_index", "unknown1", "unknown2", "bone_index", "bone_index_count", "unknown3", "bone_indices_offset",
+                                        "faceset_count", "faceset_index_offset", "vertset_info_count", "vertset_info_offset"])
 
-    __flver_file_path = ""
-    __metadata = None                   # flver file metadata-- data offset, number of meshes, bones, etc.
+    # faceset_info - information about each faceset in this file, including information needed to obtain actual face data
+    #       > flags - flags for this faceset (specific purpose yet unknown)
+    #       > topology - yet unknown
+    #       > cull_backfaces - presumably information about whether or not to cull the backfaces of faces in this faceset
+    #       > index_count - number of vertex indices in this faceset
+    #       > buffer_offset - offset to this faceset buffer (relative to the mater data offset, self.__metadata.data_offset)
+    #       > buffer_size - total size in bytes of this faceset buffer
+    faceset_info = namedtuple("faceset_info", ["flags", "topology", "cull_backfaces", "unknown1", "unknown2",
+                                               "index_count", "buffer_offset", "buffer_size", "unknown3", "unknown4", "unknown5"] )
 
-    __materials_info = None             # per material: offsets to material names, material paths, parameter count, etc.
-    __mesh_info = None                  # per mesh: is_dynamic, material_index, bone_index, etc.
-    __faceset_info = None               # per faceset: information about each faceset buffer (indices count, offset to indices, etc.)
-    __vertex_info = None                # per vertex set: vertex_struct_formats_index, data size per vertex, vertices offset, vertex_count, etc.
-    __vertex_description_info = None    # per vertex description: count of datapoints in this description, offset to start of description
-    __material_parameters = None        # per material?: offsets to material/texture filenames(?)
-    __vertex_struct_formats = None      # list of ordered dictionaries describing the vertex data layouts
+    # vertset_info - information about each set of vertices (one vertex set per mesh)
+    #       > vertset_struct_formats_index - index telling which vertex structure to use for this vertex set
+    #       > per_vertex_size - the size, in bytes, of each vertex in this set
+    #       > vertex_count - number of vertices in this set
+    #       > buffer_size - total vertex buffer size for this set (per_vertex_size * vertex_count)
+    #       > buffer_offset - offset to the start of the vertex data for this set (relative to the master data offset, self.__metadata.data_offset)
+    vertset_info = namedtuple("vertset_info", ["unknown1", "vertset_struct_formats_index", "per_vertex_size", "vertex_count",
+                                             "unknown2", "unknown3", "buffer_size", "buffer_offset"])
+
+    # vertset_description_info - A section of the flver data contains 'vertset_descriptions', which describe possible 
+    #   layouts of vertset data (which vertex data is stored in a vertex buffer-- position, vert color, bone weight, etc.).
+    #   vertset_description_info holds information used to locate and read each of these 'vertset_descriptions'.
+    #       > datatype_count - Number of vertex data types in this vertset description
+    #       > description_offset - offset to the start of this vertset description
+    vertset_description_info = namedtuple("vertset_description_info", ["datatype_count", "unknown1", "unknown2", "description_offset"])
+
+
+    # verset_struct_formats - an list holding lists of the possible vertex data structures in this flver file
+    #       for example:
+    #                   ['position', 'bone index', 'normal', 'vertex color', 'bitangent', 'diffuse/lightmap UV']
+    #                   ['position', 'bone index', 'bone weight', 'normal', 'vertex color', 'bitangent', 'diffuse/lightmap UV']
+    #                   ['position', 'bone index', 'normal', 'bitangent', 'diffuse/lightmap UV']
+    #                   ['position', 'bone index', 'bone weight', 'normal', 'bitangent', 'diffuse/lightmap UV']
+    #
+    #       Each vertset will reference an index into vertset_struct_formats (index found at vertset_info.vertset_struct_formats_index),
+    #       which in turn reveals the structure of the data in that vertset.
+
+
+    # vert_data_dict is a dictionary used to reference the underlying data structure for each possible data type in a vertset.
+    #       > key = vertex data type
+    #       > value = struct format for that data type
+    vert_data_dict = dict({"position": "fff",
+                           "bone index": "I",
+                           "normal": "BBBx",
+                           "vertex color": "BBBB",
+                           "bitangent": "BBBB",
+                           "diffuse/lightmap UV": "HHxxxx",
+                           "bone weight": "II",
+                           "diffuse UV": "HH",
+                           "unknown": "I"},)
+
+    def __init__(self):
+
+        self.__flver_file_path = ""
+        self.__metadata = None  # flver file metadata-- data offset, number of meshes, bones, etc.
+
+        self.__materials_info = None  # per material: offsets to material names, material paths, parameter count, etc.
+        self.__mesh_info = None  # per mesh: is_dynamic, material_index, bone_index, etc.
+        self.__faceset_info = None  # per faceset: information about each faceset buffer (indices count, offset to indices, etc.)
+        self.__vertset_info = None  # per vertex set: vertset_struct_formats_index, data size per vertex, vertices offset, vertex_count, etc.
+        self.__vertset_description_info = None  # per vertex description: count of datapoints in this description, offset to start of description
+        self.__material_parameters = None  # per material?: offsets to material/texture filenames(?)
+        self.__vertset_struct_formats = None  # list of ordered dictionaries describing the vertex data layouts
+
 
     def extract_model(self):
         """
@@ -48,32 +121,20 @@ class FlverExtractor:
             raise Exception("A file must be loaded before extraction.  Use FlverExtractor.load_file(flver_filepath)")
 
 
-        # TODO: fix bug occurring when there is more than one faceset per mesh.  There is a "faceset_count" parameter stored in self.__mesh_info that probably should be referenced
-        vert_data_dict = dict({"position":"fff",
-                              "bone index":"I",
-                              "normal":"BBBx",
-                              "vertex color":"BBBB",
-                              "bitangent":"BBBB",
-                              "diffuse/lightmap UV":"HHxxxx",
-                              "bone weight":"II",
-                              "diffuse UV":"HH",
-                              "unknown":"I"},
-                              )
-
         with BinaryReader(self.__flver_file_path) as reader:
 
             # add vertex sets to model
             mesh_list = []
-            for vi in self.__vertex_info:
+            for vi in self.__vertset_info:
 
                 current_vertex_format = ""
                 reader.seek(vi.buffer_offset + self.__metadata.data_offset)
-                for datatype in self.__vertex_struct_formats[vi.vertex_struct_formats_index]:
-                    current_vertex_format += vert_data_dict.get(datatype)
+                for datatype in self.__vertset_struct_formats[vi.vertset_struct_formats_index]:
+                    current_vertex_format += FlverExtractor.vert_data_dict.get(datatype)
                 vert_list = []
+                new_vert = Vertex()
                 for vertex in range(0,vi.vertex_count):
                     vert_data = reader.get_struct(current_vertex_format)
-                    new_vert = Vertex()
                     new_vert.uv = None
                     new_vert.normal = None
                     new_vert.lightmap_uv = None
@@ -81,7 +142,7 @@ class FlverExtractor:
 
                     data_index = 0
 
-                    for data_type in self.__vertex_struct_formats[vi.vertex_struct_formats_index]:
+                    for data_type in self.__vertset_struct_formats[vi.vertset_struct_formats_index]:
                         if data_type == "position":
                             new_vert.position = Vector3(vert_data[data_index], vert_data[data_index + 1], vert_data[data_index + 2])
                             data_index += 3
@@ -140,8 +201,7 @@ class FlverExtractor:
                             pass
 
                     vert_list.append(new_vert)
-                new_mesh = Mesh(vert_list)
-                mesh_list.append(new_mesh)
+                mesh_list.append(Mesh(vert_list))
 
             # create facesets
             temp_face_sets = []
@@ -151,7 +211,7 @@ class FlverExtractor:
                 for face_index in range(0, face_data.index_count):
                     face_set.append(reader.get_u_int16())
 
-                temp_face_sets.append(self.__sort_faces(face_set))    # re-order faceset
+                temp_face_sets.append(self.__sort_faces_vertex_list(face_set))    # re-order faceset
 
             # break facesets into faces
             face_sets = []
@@ -206,26 +266,36 @@ class FlverExtractor:
             self.__faceset_info = \
                 self.__obtain_info(reader, "IBBBBIIIIII", self.__metadata.faceset_count, self.faceset_info)
 
-            # collect vertex info
-            self.__vertex_info = \
-                self.__obtain_info(reader, "IIIIIIII", self.__metadata.vertex_info_count, self.vertex_info)
+            # collect vertset info
+            self.__vertset_info = \
+                self.__obtain_info(reader, "IIIIIIII", self.__metadata.vertset_info_count, self.vertset_info)
 
             # collect vertex descriptions info
-            self.__vertex_description_info = \
-                self.__obtain_info(reader, "IIII", self.__metadata.vertex_descr_count, self.vertex_description_info)
+            self.__vertset_description_info = \
+                self.__obtain_info(reader, "IIII", self.__metadata.vertex_descr_count, self.vertset_description_info)
 
             # collect material parameters
             self.__material_parameters = \
                 self.__obtain_info(reader, "IIffIIII", self.__metadata.material_param_count, self.material_parameters)
 
-            self.__vertex_struct_formats = self.__define_vertset_formats()
+            self.__vertset_struct_formats = self.__define_vertset_formats()
+
+            with open(self.__flver_file_path, 'r', encoding='utf-16') as reader:
+                # reader.seek(29584)
+                # print(reader.read(5))
+                for m in self.__vertset_struct_formats:
+                    print(m)
+                    # reader.seek(m.name_offset2)
+                    # print(reader.read(35))
+                    # print(m.param_count)
+
+
 
     # check to see whether the file is a readable format
     def __is_ds1_flver(self):
         """return true if the given file is of a supported format
 
-        A supported file will meet three criteria;  It will be an .flver file with little-endian byte order,
-        and will be version 2.12.
+        Currently support are v2.12 .flver files with little-endian byte order.
         """
 
         with BinaryReader(self.__flver_file_path) as reader:
@@ -241,8 +311,8 @@ class FlverExtractor:
 
             return False
 
-
-    def __obtain_info(self, binary_reader, struct_fmt, item_count, named_tuple):
+    @staticmethod
+    def __obtain_info(binary_reader, struct_fmt, item_count, named_tuple):
         """
         @type named_tuple: namedtuple
         """
@@ -257,7 +327,7 @@ class FlverExtractor:
 
         vertset_formats = []
         with BinaryReader(self.__flver_file_path) as reader:
-            for vert_info in self.__vertex_description_info:
+            for vert_info in self.__vertset_description_info:
                 reader.seek(vert_info.description_offset)
                 formats = []
                 for i in range(0, vert_info.datatype_count):
@@ -285,69 +355,57 @@ class FlverExtractor:
                 vertset_formats.append(formats)
         return vertset_formats
 
-    # sorts a given faceset into an order that Blender can use
-    def __sort_faces(self, faces):
+
+    # sorts a given list of vertex indices defining a set of faces into an order that Blender can use
+    @staticmethod
+    def __sort_faces_vertex_list(faces_vertex_list):
         # TODO: figure out why this works
-        faceslist = []
+        sorted_faces_vertex_list = []
         StartDirection = -1
-        f1 = faces[0]
-        f2 = faces[1]
+        face_vertex1 = faces_vertex_list[0]
+        face_vertex2 = faces_vertex_list[1]
         FaceDirection = StartDirection
         counter = 2
-        while counter < len(faces):
+        while counter < len(faces_vertex_list):
+            face_vertex3 = faces_vertex_list[counter]
 
-            f3 = faces[counter]
+            # For each vertex in the list, reverse the order of the vertices,
+            # effectively reversing the normal of the face.
             FaceDirection *= -1
-            if (f1 != f2) and (f2 != f3) and (f3 != f1):
+            # If any of the three vertices in this set are duplicates,
+            # do not append, effectively skipping one vertex.
+            if (face_vertex1 != face_vertex2) and (face_vertex2 != face_vertex3) and (face_vertex3 != face_vertex1):
                 if FaceDirection > 0:
-                    faceslist.append(f1)
-                    faceslist.append(f2)
-                    faceslist.append(f3)
+                    sorted_faces_vertex_list.append(face_vertex1)
+                    sorted_faces_vertex_list.append(face_vertex2)
+                    sorted_faces_vertex_list.append(face_vertex3)
                 else:
-                    faceslist.append(f1)
-                    faceslist.append(f3)
-                    faceslist.append(f2)
-            counter = counter + 1
-            f1 = f2
-            f2 = f3
+                    sorted_faces_vertex_list.append(face_vertex1)
+                    sorted_faces_vertex_list.append(face_vertex3)
+                    sorted_faces_vertex_list.append(face_vertex2)
 
-        return faceslist
+            counter = counter + 1
+
+            # Shift the set of vertices down the list by one
+            face_vertex1 = face_vertex2
+            face_vertex2 = face_vertex3
+        return sorted_faces_vertex_list
 
 
     class __FlverMetadata:
 
-        data_offset = 0
-        data_size = 0
-        hitbox_count = 0
-        material_count = 0
-        bone_count = 0
-        mesh_count = 0
-        vertex_info_count = 0
-        # bounding_box_1 (vec3)
-        # bounding_box_2 (vec3)
-        # unknown_3 (u int32)
-        # unknown_4 (u int32)
-        # unknown_5 (u int32)
-        # unknown_6 (u int32)
-        faceset_count = 0
-        vertex_descr_count = 0
-        material_param_count = 0
-
-        vert_pointers = None
-
-
         def __init__(self, flver_file):
 
             with BinaryReader(flver_file) as reader:
-                reader.seek(12)
+                reader.seek(12)     # seek past file header (filetype, endianness, version info)
                 self.data_offset = reader.get_u_int32()
                 self.data_size = reader.get_u_int32()
                 self.hitbox_count = reader.get_u_int32()
                 self.material_count = reader.get_u_int32()
                 self.bone_count = reader.get_u_int32()
                 self.mesh_count = reader.get_u_int32()
-                self.vertex_info_count = reader.get_u_int32()
-                reader.seek(80)
+                self.vertset_info_count = reader.get_u_int32()
+                reader.seek(80)     # seek past bounding box definition and 4 other currently unused ints
                 self.faceset_count = reader.get_u_int32()
                 self.vertex_descr_count = reader.get_u_int32()
                 self.material_param_count = reader.get_u_int32()
