@@ -6,10 +6,12 @@ class Face:
 
         :param vertices: List of unsigned ints, each representing the index of a list of Vertex objects.
         """
+
+        # Initialize members to None
+        self.reset()
+
         if vertices is not None:
             self.vertices = vertices
-        else:
-            self.vertices = [0, 0, 0]
 
     @property
     def vertices(self):
@@ -36,3 +38,7 @@ class Face:
 
     def __str__(self):
         return f'vertices={self.vertices}'
+
+    def reset(self):
+        """Resets vertices=[]."""
+        self._vertices = []

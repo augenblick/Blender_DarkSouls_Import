@@ -10,7 +10,7 @@ class Model:
         :param meshes: List of Mesh objects.
         """
 
-        self._meshes = []
+        self.reset()
 
         if meshes is not None:
             self.meshes = meshes
@@ -37,3 +37,7 @@ class Model:
             return_string += f'mesh[{i}]={self.meshes[i]}\n'
 
         return return_string
+
+    def reset(self):
+        """Resets meshes=[]"""
+        self._meshes = []

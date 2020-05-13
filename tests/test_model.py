@@ -33,3 +33,14 @@ def test_str():
     model.meshes.append(mesh)
 
     print(model)
+
+
+def test_reset():
+    model = Model()
+    assert len(model.meshes) == 0
+
+    model.meshes.append(Mesh())
+    assert len(model.meshes) == 1
+
+    model.reset()
+    assert len(model.meshes) == 0

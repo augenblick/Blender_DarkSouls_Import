@@ -12,8 +12,7 @@ class Mesh:
         :param face_sets: List of FaceSet objects
         """
 
-        self._vertices = []
-        self._face_sets = []
+        self.reset()
 
         if vertices is not None:
             self.vertices = vertices
@@ -61,3 +60,8 @@ class Mesh:
             return_string += f'face_set[{i}]={self.face_sets[i]}\n'
 
         return return_string
+
+    def reset(self):
+        """Resets vertices=[], face_sets=[]"""
+        self._vertices = []
+        self._face_sets = []

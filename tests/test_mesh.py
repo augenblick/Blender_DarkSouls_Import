@@ -45,3 +45,19 @@ def test_str():
 
     print(mesh)
     assert str(mesh) == expected_string
+
+
+def test_reset():
+    mesh = Mesh()
+    assert len(mesh.face_sets) == 0
+    assert len(mesh.vertices) == 0
+
+    mesh.face_sets.append(FaceSet())
+    mesh.face_sets.append(FaceSet())
+    mesh.vertices.append(Vertex())
+    assert len(mesh.face_sets) == 2
+    assert len(mesh.vertices) == 1
+
+    mesh.reset()
+    assert len(mesh.face_sets) == 0
+    assert len(mesh.vertices) == 0
