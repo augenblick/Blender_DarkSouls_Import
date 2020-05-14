@@ -52,3 +52,6 @@ class Vector3:
         if not isinstance(z, float):
             raise TypeError('Expects float value.')
         self._z = z
+
+    def __str__(self):
+        return 'x: {}, y: {}, z: {}'.format(self.x, self.y, self.z)

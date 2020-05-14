@@ -1,6 +1,4 @@
-.idea/
-
-# Added the python gitignore from 
+# Added the python gitignore from
 # https://github.com/github/gitignore/blob/master/Python.gitignore
 
 # Byte-compiled / optimized / DLL files
@@ -146,3 +144,9 @@ cython_debug/
 reference images/
 flver_runner.py
 flver.py
+
+# PyCharm stuff
+.idea/
+
+# Temporary local files for dev/testing never meant to be committed
+temp_ignored/
