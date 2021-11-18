@@ -3,7 +3,7 @@ import sys
 import bpy
 
 from bpy.types import Operator
-from bpy.props import FloatVectorProperty, StringProperty, BoolProperty, EnumProperty
+from bpy.props import FloatVectorProperty, StringProperty, BoolProperty, EnumProperty, CollectionProperty
 from bpy_extras.object_utils import AddObjectHelper, object_data_add
 from bpy_extras.io_utils import ImportHelper
 from mathutils import Vector
@@ -277,11 +277,17 @@ class DSIMPORTER_OT_ImportDsData(bpy.types.Operator, ImportHelper):
         maxlen=255,
         )
 
-    filepath: StringProperty(subtype="FILE_PATH")
-    
+    files: CollectionProperty(
+        type=bpy.types.OperatorFileListElement,
+        options={'HIDDEN', 'SKIP_SAVE'},
+    )
+
+    directory: StringProperty(subtype='DIR_PATH')
+
     def execute(self, context):
-        file = open(self.filepath, 'rb')
-        read_some_data(context, file.name)
+        for filepath in self.files:
+            with open(os.path.join(self.directory, filepath.name), 'rb') as f:
+                read_some_data(context, f.name)
         return {'FINISHED'}
 
     def invoke(self, context, event):
