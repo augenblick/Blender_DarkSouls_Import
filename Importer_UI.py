@@ -11,46 +11,52 @@ from bpy.types import Panel, PropertyGroup
 
 
 class MyProperties(PropertyGroup):
-	filePath: StringProperty(
-					name="name", 
-					description="descrp", 
-					default="",
-					maxlen=0, 
-					subtype='FILE_PATH'
-	)
+    importFolder: BoolProperty(
+        name="AutoImport Folder",
+        description="Import all .flver files in folder",
+        default=False
+    )
 
-	useCollections: BoolProperty(
-					name="Use Collections?", 
-					description="Move each imported mesh into its own collection", 
-					default=True
-	)
-	
-	useLegacyNodes: BoolProperty(
-					name="Use Legacy Nodes?", 
-					description="Use legacy nodes in shader graph (as opposed to Principled BSDF)", 
-					default=False
-	)
-	
-	specular: FloatProperty(
-					name="Material Specular",
-					description="Unless 'Use Legacy Nodes' is checked, all imported mesh materials will default to this Specular value",
-					default=0.5, 
-					min=-3.402823e+38, 
-					max=3.402823e+38, 
-					soft_min=0.0, 
-					soft_max=1.0, 
-	)
+    filePath: StringProperty(
+                    name="name",
+                    description="descrp",
+                    default="",
+                    maxlen=0,
+                    subtype='FILE_PATH'
+    )
 
-					
-	roughness: FloatProperty(
-				name="Material Roughness",
-				description="Unless 'Use Legacy Nodes' is checked, all imported mesh materials will default to this Roughness value",
-				default=0.5, 
-				min=-3.402823e+38, 
-				max=3.402823e+38, 
-				soft_min=0.0, 
-				soft_max=1.0, 
-	)
+    useCollections: BoolProperty(
+                    name="Use Collections?",
+                    description="Move each imported mesh into its own collection",
+                    default=True
+    )
+
+    useLegacyNodes: BoolProperty(
+                    name="Use Legacy Nodes?",
+                    description="Use legacy nodes in shader graph (as opposed to Principled BSDF)",
+                    default=False
+    )
+
+    specular: FloatProperty(
+                    name="Material Specular",
+                    description="Unless 'Use Legacy Nodes' is checked, all imported mesh materials will default to this Specular value",
+                    default=0.5,
+                    min=-3.402823e+38,
+                    max=3.402823e+38,
+                    soft_min=0.0,
+                    soft_max=1.0,
+    )
+
+
+    roughness: FloatProperty(
+                name="Material Roughness",
+                description="Unless 'Use Legacy Nodes' is checked, all imported mesh materials will default to this Roughness value",
+                default=0.5,
+                min=-3.402823e+38,
+                max=3.402823e+38,
+                soft_min=0.0,
+                soft_max=1.0,
+    )
 
 
 
@@ -78,6 +84,7 @@ class DSIMPORTER_PT_DsInterface(Panel):
         colOpts.prop(scene.my_tool, "useLegacyNodes")
         colOpts.prop(scene.my_tool, "specular")
         colOpts.prop(scene.my_tool, "roughness")
+        colOpts.prop(scene.my_tool, "importFolder")
         layout.separator()
         layout.label(text = "Praise the Sun!", icon_value=custom_icons["custom_icon"].icon_id)
         layout.operator("dsimporter.importdsdata", text="Import")
