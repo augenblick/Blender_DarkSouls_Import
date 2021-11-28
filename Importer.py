@@ -15,6 +15,12 @@ from .Importer_UI import MyProperties
 
 def read_some_data(context, filepath):
 
+
+    lod_models = [ 'm2340B1', 'm2380B1', 'm2390B1', 'm2410B1', 'm2430B1', 'm2500B1', 'm3301B1', 'm8000B1_0000', 'm8010B1_0000', 'm8020B1_0000', 'm8030B1_0000' ]
+    for lod_model in lod_models:
+        if os.path.basename(filepath).startswith(lod_model):
+            return
+
     # Load values set in addon preferences
     pathTPFs = bpy.context.preferences.addons[__package__].preferences.tpfPath
     pathDDSs = bpy.context.preferences.addons[__package__].preferences.ddsPath
