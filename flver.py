@@ -197,10 +197,10 @@ class flv_file:
                         thisMaterial['d' + str(diffuseCount)] = texture[0]
                     elif currentFileName[4] == 'g':
                         lightMapCount += 1
-                        thisMaterial['lm' + str(diffuseCount)] = texture[0]
+                        thisMaterial['lm' + str(lightMapCount)] = texture[0]
                     elif currentFileName[4] == 't':
                         detailBumpCount += 1
-                        thisMaterial['db' + str(diffuseCount)] = texture[0]
+                        thisMaterial['db' + str(detailBumpCount)] = texture[0]
 
                 textureCount += 1
 
