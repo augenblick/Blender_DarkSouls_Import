@@ -3,7 +3,7 @@ import sys
 import bpy
 
 from bpy.types import Operator
-from bpy.props import FloatVectorProperty, StringProperty, BoolProperty, EnumProperty
+from bpy.props import FloatVectorProperty, StringProperty, BoolProperty, EnumProperty, CollectionProperty
 from bpy_extras.object_utils import AddObjectHelper, object_data_add
 from bpy_extras.io_utils import ImportHelper
 from mathutils import Vector
@@ -14,6 +14,12 @@ from .Importer_UI import MyProperties
 
 
 def read_some_data(context, filepath):
+
+
+    lod_models = [ 'm2340B1', 'm2380B1', 'm2390B1', 'm2410B1', 'm2430B1', 'm2500B1', 'm3301B1', 'm8000B1_0000', 'm8010B1_0000', 'm8020B1_0000', 'm8030B1_0000' ]
+    for lod_model in lod_models:
+        if os.path.basename(filepath).startswith(lod_model):
+            return
 
     # Load values set in addon preferences
     pathTPFs = bpy.context.preferences.addons[__package__].preferences.tpfPath
@@ -262,6 +268,23 @@ def read_some_data(context, filepath):
 
     return {'FINISHED'}
 
+def AutoImport_Folder(context, filePath, file):
+    print("full name : ")
+    print(filePath)
+    path_to_obj_dir = os.path.dirname(filePath)
+
+    file_list = sorted(os.listdir(path_to_obj_dir))
+
+    obj_list = [item for item in file_list if item.endswith('.flver')]
+    print("number of file founded:")
+    print(len(obj_list))
+
+    for item in obj_list:
+        path_to_file = os.path.join(path_to_obj_dir, item)
+        print(path_to_file)
+        read_some_data(context, path_to_file)
+
+    return {'FINISHED'}
 
 class DSIMPORTER_OT_ImportDsData(bpy.types.Operator, ImportHelper):
     bl_idname = "dsimporter.importdsdata"
@@ -279,9 +302,18 @@ class DSIMPORTER_OT_ImportDsData(bpy.types.Operator, ImportHelper):
 
     filepath: StringProperty(subtype="FILE_PATH")
     
+    # def execute(self, context):
+    #     file = open(self.filepath, 'rb')
+    #     read_some_data(context, file.name)
+    #     return {'FINISHED'}
     def execute(self, context):
         file = open(self.filepath, 'rb')
-        read_some_data(context, file.name)
+        importFolder = bpy.context.scene.my_tool.importFolder
+
+        if not importFolder:
+            read_some_data(context, file.name)
+        else:
+            AutoImport_Folder(context, file.name, file)
         return {'FINISHED'}
 
     def invoke(self, context, event):
